@@ -62,6 +62,8 @@ the Door Demon
 -- Font: Calvin S
 -- Reason: I have a hard time finding functions in Lua, lol
 
+RightCrankMenu = require("RightCrankMenu")
+Crank = require("crank")
 
 --[[ 
 ╔═╗╦  ╔═╗╔╗ ╔═╗╦    ╦  ╦╔═╗╦═╗╦╔═╗╔╗ ╦  ╔═╗╔═╗
@@ -69,19 +71,6 @@ the Door Demon
 ╚═╝╩═╝╚═╝╚═╝╩ ╩╩═╝   ╚╝ ╩ ╩╩╚═╩╩ ╩╚═╝╩═╝╚═╝╚═╝
 ]]
 
--- Titles for the icons selected with the Right Crank Menu (RCM)
-menu_titles = 
-{{"Look",       "look.png"},
-  {"Talk",      "talk.png"},
-  {"Fight",     "fight.png"},
-  {"Magic",     "magic.png"},
-  {"Gear",      "equipment.png"},
-  {"Inventory", "items.png"},
-  {"Quest Log", "quests.png"},
-  {"Game Files","files.png"},
-  {"Settings",  "settings.png"}}
--- The number of icons in the menu may get larger later, I dunno
-menu_length = table.maxn(menu_titles)
 
 menu_files = {"New","Load","Save","Quit"}
 LCM_files_selected = "New"
@@ -92,27 +81,14 @@ Ico_W, Ico_H = 40,40
 Scr_W, Scr_H = 400,240
 
 -- Initial value for icon_name
-icon_name = "Look"
+--icon_name = "Look"
 -- Using the default font until I find something better
 love.graphics.setNewFont(18)
 
--- My usb knob does 30 clicks per rotation, so 12' per click
--- No way to track absolute angle between runs so assume 0'
-knob_angle = 0
--- Set to 0 means no recent clicks
-prev_click_time = 0
-next_click_time = 0
 
--- The most recent crank velocity
-crank_velocity = 0
--- The most recent direction the crank was turned. +=cw, -=ccw
-crank_direction = 0
--- Set the initial icon to number 0 (Look)
-crank_offset = 0
 -- Set the initial game file selection to 0 (New)
 files_offset = 0
--- max value should be height of icon x number of icons
-crank_maxval = 40 * menu_length
+
 -- Screen width of playdate is 400px
 
 -- Which menu is the crank currently attached to?
@@ -140,12 +116,6 @@ the functions run before love.draw there are no guarantees.
 function love.load()
   print(_VERSION)
   
-  for index,value in ipairs(menu_titles) do
-      menu_titles[index][3] = love.graphics.newImage(menu_titles[index][2])
-  end
-  
-  gear_bg = love.graphics.newImage("figure.png")
-  
   -- Final version will be 1-bit color, but red == unfinished
   love.graphics.setBackgroundColor(0,0,0,255)
   
@@ -153,6 +123,17 @@ function love.load()
   -- Might add magnification factor for pixel doubling on PC
   love.window.setMode(Scr_W,Scr_H,{resizable=false})
   love.window.setTitle("Your Game Title Here")
+
+  -- load the menu stuff
+  RightCrankMenu.load()
+  gear_bg = love.graphics.newImage("figure.png")
+  
+
+end
+
+
+function love.update(dt)
+    RightCrankMenu.update(dt)
 end
 
 
@@ -162,19 +143,9 @@ end
 ┴─┘└─┘ └┘ └─┘o─┴┘┴└─┴ ┴└┴┘
 ]]
 function love.draw()
-  -- Crank-selected Menu Main Box Outline
-  love.graphics.rectangle("line",2,2,116,236)
   
-  -- Right Crank Menu Box Outlines and Icons
-  for index,value in ipairs(menu_titles) do
-    draw_icon(menu_titles[index][3],index-1)
-  end
-    
-  -- Hacky "active icon" selector box here
-  if active_menu == "RCM" then
-    love.graphics.rectangle("line",360,100,40,40)
-    love.graphics.rectangle("line",361,101,39,39)
-  end
+  RightCrankMenu.draw()
+  
 
   --[[ 
       The selector box for the LCM will disappear when the RCM is active.
@@ -198,8 +169,9 @@ function love.draw()
   --[[
     Debuggery here: uncomment to see on-screen crank stats
   ]]
-  love.graphics.print({{255,0,0,255},"Angle: ",{255,0,0,255},knob_angle},125,5)
-  love.graphics.print({{255,0,0,255},"°/sec: ",{255,0,0,255},crank_velocity},125,25)
+  Crank.debug_print()
+  RightCrankMenu.debug_print()
+  
 end
 
 
@@ -214,48 +186,13 @@ end
     the LCM (or give it focus) the user will have to press left.
 ]]
 function print_selected_icon()
-  icon_selection = ((crank_maxval - crank_offset)/40)%menu_length
-  --love.graphics.print( ((crank_maxval - crank_offset)/40)%6 , 40,60)
-  if icon_selection%1 == 0 then
-    icon_name = menu_titles[icon_selection+1][1]
-    
-  end
-  love.graphics.printf(icon_name,0,3,120,"center")
+  
+  local icon_data = RightCrankMenu.get_active_icon()
+  love.graphics.printf(icon_data[1],0,3,120,"center")
 
 end
 
 
---[[
-┌┬┐┬─┐┌─┐┬ ┬    ┬┌─┐┌─┐┌┐┌
- ││├┬┘├─┤│││    ││  │ ││││
-─┴┘┴└─┴ ┴└┴┘────┴└─┘└─┘┘└┘
-    draw_icon does just that: draws a single icon to the right crank menu.
-    There's no reason this shouldn't just iterate through the table of 
-    icons, though; I'll change that in the next revision.
-]]
-function draw_icon(icon, order)
-  --[[
-  crank_offset ranges between 0 and 239 (really 232), but we add 2
-  to that to give the icons a buffer from the top, and add another
-  100 to shift our first icon into the centered selection box.
-  
-    ONLY UPDATES WHEN RCM IS IN FOCUS!
-  ]]
-  local height = ((order*40)+crank_offset+102)%crank_maxval
-  local width = 362+((100-height)^2)/1000
-  
-  if (height >= crank_maxval-40) then
-    -- width2 is a temporary variable to keep the icons on the curve
-    -- the the top and bottom of the screen
-    width2 = 362+((100-(height-crank_maxval))^2)/1000
-    love.graphics.rectangle("line",width2,height-crank_maxval,36,36)
-    love.graphics.draw(icon,width2+1,height-crank_maxval)
-  end
-
-  love.graphics.rectangle("line",width,height%crank_maxval,36,36)
-  love.graphics.draw(icon,width+1,height%crank_maxval)
-  
-end
 
 
 --[[
@@ -362,19 +299,19 @@ end
   Each click is 12' +/- previous value
 ]]
 function love.keypressed(key)
-  if active_menu == "RCM" then
+  
+  local consumed = Crank.keypressed(key)
+  if not consumed then
+    --handle other keypresses
+  end
+  
+  if RightCrankMenu.is_active() then
     
-    if key == "kp+" or key == "up" then
-      knob_angle = (knob_angle - 12)%360
-      crank_offset = (crank_offset + 8)%crank_maxval
-      crank_direction = -1
-    elseif key == "kp-" or key == "down" then
-      knob_angle = (knob_angle + 12)%360
-      crank_offset = (crank_offset - 8)%crank_maxval
-      crank_direction = 1
-    end
+    --RightCrankMenu.keypressed(key)
+    
     if key == "a" or key == "left" then
       active_menu = "LCM"
+      RightCrankMenu.set_active(false)
     end
     
   elseif active_menu == "LCM" then
@@ -392,21 +329,6 @@ function love.keypressed(key)
     end
     
   end
-  crank_velocity = get_crank_velocity()
 end
 
 
---[[
-┌─┐┌─┐┌┬┐   ┌─┐┬─┐┌─┐┌┐┌┬┌─   ┬  ┬┌─┐┬  ┌─┐┌─┐┬┌┬┐┬ ┬
-│ ┬├┤  │    │  ├┬┘├─┤│││├┴┐   └┐┌┘├┤ │  │ ││  │ │ └┬┘
-└─┘└─┘ ┴────└─┘┴└─┴ ┴┘└┘┴ ┴────└┘ └─┘┴─┘└─┘└─┘┴ ┴  ┴ 
-]]
-function get_crank_velocity()
-  prev_click_time = next_click_time
-  next_click_time = love.timer.getTime()
-  if prev_click_time == 0 then
-    return 18 -- Magic Number, don't care.
-  else
-    return (12 * crank_direction) / (next_click_time - prev_click_time)
-  end
-end
