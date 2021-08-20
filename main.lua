@@ -1,4 +1,7 @@
 --[[
+
+ORIGINAL FILE NOTICE
+
 ╦  ┌─┐┌─┐┌─┐┬    ╔╗ ┬┌┬┐┌─┐ 
 ║  ├┤ │ ┬├─┤│    ╠╩╗│ │ └─┐ 0
 ╩═╝└─┘└─┘┴ ┴┴─┘  ╚═╝┴ ┴ └─┘ 0
@@ -25,6 +28,7 @@ Studio on Windows 10; it seems to work fine, but I can't assume any
 responsibility if it's actually riddled with malware or otherwise
 nukes your system. With that glowing endorsement in place, you can
 find it here: https://studio.zerobrane.com
+
 
 This code requires LÖVE; there are instructions for downloading and
 installing LÖVE at love2d.org. I'll let you figure that part out for
@@ -62,37 +66,33 @@ the Door Demon
 -- Font: Calvin S
 -- Reason: I have a hard time finding functions in Lua, lol
 
+
+
+--[[
+
+NEW FILE NOTICE
+
+This file is very much cut down from the original, and is included 
+only to provide an example of how to use RightCrankMenu.lua and crank.lua,
+and to make a program that runs for testing the menu.
+
+Just as a note, I would also recommend ZeroBrane Studio to anyone
+wanting to code in lua. 
+
+--]]
+
+
+require("globals")
+
 RightCrankMenu = require("RightCrankMenu")
 Crank = require("crank")
 
---[[ 
-╔═╗╦  ╔═╗╔╗ ╔═╗╦    ╦  ╦╔═╗╦═╗╦╔═╗╔╗ ╦  ╔═╗╔═╗
-║ ╦║  ║ ║╠╩╗╠═╣║    ╚╗╔╝╠═╣╠╦╝║╠═╣╠╩╗║  ║╣ ╚═╗
-╚═╝╩═╝╚═╝╚═╝╩ ╩╩═╝   ╚╝ ╩ ╩╩╚═╩╩ ╩╚═╝╩═╝╚═╝╚═╝
-]]
-
-
-menu_files = {"New","Load","Save","Quit"}
-LCM_files_selected = "New"
-
--- Crank icon dimensions (including borders)
-Ico_W, Ico_H = 40,40
--- Playdate screen dimensions
-Scr_W, Scr_H = 400,240
 
 -- Initial value for icon_name
 --icon_name = "Look"
 -- Using the default font until I find something better
 love.graphics.setNewFont(18)
 
-
--- Set the initial game file selection to 0 (New)
-files_offset = 0
-
--- Screen width of playdate is 400px
-
--- Which menu is the crank currently attached to?
-active_menu = "RCM"
 
 
 --[[
@@ -126,7 +126,6 @@ function love.load()
 
   -- load the menu stuff
   RightCrankMenu.load()
-  gear_bg = love.graphics.newImage("figure.png")
   
 
 end
@@ -147,27 +146,15 @@ function love.draw()
   RightCrankMenu.draw()
   
 
-  --[[ 
-      The selector box for the LCM will disappear when the RCM is active.
-    ]]
-  if active_menu == "LCM" then
-    love.graphics.rectangle("line",3,3,112,24)
-  end
-  
-  --[[
-    Save File Management Menu
-  ]]
-  if icon_name == "Game Files" then
-      draw_LCM_Files()
-    elseif icon_name == "Gear" then
-      draw_LCM_Gear()
-  end
+  -- Crank-selected Menu Main Box Outline
+  love.graphics.rectangle("line",2,2,116,236)
+    
     
   -- Any text goes down here
   print_selected_icon()
   
   --[[
-    Debuggery here: uncomment to see on-screen crank stats
+    Debuggery here
   ]]
   Crank.debug_print()
   RightCrankMenu.debug_print()
@@ -194,99 +181,6 @@ end
 
 
 
-
---[[
-┌┬┐┬─┐┌─┐┬ ┬    ╦  ╔═╗╔╦╗    ╔═╗┌─┐┌─┐┬─┐
- ││├┬┘├─┤│││    ║  ║  ║║║    ║ ╦├┤ ├─┤├┬┘
-─┴┘┴└─┴ ┴└┴┘────╩═╝╚═╝╩ ╩────╚═╝└─┘┴ ┴┴└─
-
-Might rearrange this a bit to provide space for items mapped to the 
-A and B buttons during combat. Probably shift everything down, and 
-place squares on either side of the head. I dunno.
-]]
-function draw_LCM_Gear()
-  
-  --[[
-  Figure Background
-  ]]
-  love.graphics.draw(gear_bg,6,30)
-  
-  --[[
-  Helmet
-  ]]
-  love.graphics.setColor(0,0,0,255)
-  love.graphics.rectangle("line",41,30,36,36)
-  love.graphics.setColor(255,255,255,255)
-  love.graphics.rectangle("line",42,31,34,34)
-  
-  --[[
-  Armor
-  ]]
-  love.graphics.setColor(0,0,0,255)
-  love.graphics.rectangle("line",20,71,75,64)
-  love.graphics.setColor(255,255,255,255)
-  love.graphics.rectangle("line",21,72,73,62)
-
-  --[[
-  Sword
-  ]]
-  love.graphics.setColor(0,0,0,255)
-  love.graphics.rectangle("line",20,140,24,84)
-  love.graphics.setColor(255,255,255,255)
-  love.graphics.rectangle("line",21,141,22,82)
-  
-  --[[
-  Shield
-  ]]
-  love.graphics.setColor(0,0,0,255)
-  love.graphics.rectangle("line",60,140,42,62)
-  love.graphics.setColor(255,255,255,255)
-  love.graphics.rectangle("line",61,141,40,60)
-
-end
-
-
---[[
-┌┬┐┬─┐┌─┐┬ ┬    ╦  ╔═╗╔╦╗    ╔═╗┬┬  ┌─┐┌─┐
- ││├┬┘├─┤│││    ║  ║  ║║║    ╠╣ ││  ├┤ └─┐
-─┴┘┴└─┴ ┴└┴┘────╩═╝╚═╝╩ ╩────╚  ┴┴─┘└─┘└─┘
-
-This needs a lot of work still, but you get the idea.
-]]
-function draw_LCM_Files()
---[[
-  NEW GAME
-]]
-  love.graphics.printf("New",0,60,120,"center")
-  if active_menu == "LCM" and files_offset == 0 then
-      love.graphics.rectangle("line",20,60,80,25)
-  end
-  
---[[
-  LOAD GAME
-]]
-  love.graphics.printf("Load",0,100,120,"center")
-  if active_menu == "LCM" and files_offset == 1 then
-      love.graphics.rectangle("line",20,100,80,25)
-  end
-  
---[[
-  SAVE GAME
-]]
-  love.graphics.printf("Save",0,140,120,"center")
-    if active_menu == "LCM" and files_offset == 2 then
-      love.graphics.rectangle("line",20,140,80,25)
-  end
---[[
-  QUIT GAME
-]]
-  love.graphics.printf("Quit",0,180,120,"center")
-    if active_menu == "LCM" and files_offset == 3 then
-      love.graphics.rectangle("line",20,180,80,25)
-  end
-end
-
-
 --[[
 ┬  ┌─┐┬  ┬┌─┐ ┬┌─┌─┐┬ ┬┌─┐┬─┐┌─┐┌─┐┌─┐┌─┐┌┬┐
 │  │ │└┐┌┘├┤  ├┴┐├┤ └┬┘├─┘├┬┘├┤ └─┐└─┐├┤  ││
@@ -303,32 +197,17 @@ function love.keypressed(key)
   local consumed = Crank.keypressed(key)
   if not consumed then
     --handle other keypresses
+    if RightCrankMenu.is_active() then
+      if key == "a" or key == "left" then
+        RightCrankMenu.set_active(false)
+      end
+    else
+      if key == "d" or key == "right" then
+        RightCrankMenu.set_active(true)
+      end
+    end  
   end
-  
-  if RightCrankMenu.is_active() then
-    
-    --RightCrankMenu.keypressed(key)
-    
-    if key == "a" or key == "left" then
-      active_menu = "LCM"
-      RightCrankMenu.set_active(false)
-    end
-    
-  elseif active_menu == "LCM" then
-    
-    if key =="kp+" or key == "up" then
-      knob_angle = (knob_angle - 12)%360
-      files_offset = (files_offset - 1)%4
-      crank_direction = -1
-    elseif key == "kp-" or key == "down" then
-      knob_angle = (knob_angle +12)%360
-      files_offset = (files_offset + 1)%4
-      crank_direction = 1
-    elseif key == "d" or key == "right" then
-        active_menu = "RCM"
-    end
-    
-  end
+
 end
 
 

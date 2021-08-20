@@ -1,13 +1,71 @@
 
 
 
+--[[
+
+This is based on 'playdate_rpg_interface' by u/ConfidentFloor6601, 
+which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interface
+
+ * ------------------------------------------------------------------------------
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ *
+ * 3. This notice may not be removed or altered from any source distribution.
+ * -----------------------------------------------------------------------------
+ * (This is the zlib License)
+
+--]]
+
+--[[
+
+    Flexible RightCrankMenu
+
+    To use, just 'require' this file in your game code, and call
+    RightCrankMenu.load(), RightCrankMenu.draw(), and RightCrankMenu.update()
+    from their respective love / playdate functions.
+    
+    To change the setup of the menu, change things in the 'Configuration' section below
+    
+    You can get the currently selected icon by calling 'get_current_icon()'. 
+    
+    This code also requires a tiny 'globals' module with provides the screen 
+    width and height, and 'Crank' module which contains a virtual representation
+    of the playdate crank (to be replaced by the real thing quite soon I hope!)
+    
+    A useful future extension might be to include a function to call when an
+    icon is selected in the icon table, and to consume keypresses for selections.
+    
+--]]
+
+require("globals")
 local Crank = require("crank")
 
 local RightCrankMenu = {}
 
--- Titles for the icons selected with the Right Crank Menu (RCM)
+-------------------------------------------------------------------------------------
+------- CONFIGURATION ---------------------------------------------------------------
+-------------------------------------------------------------------------------------
+
+-- Titles for the icons selected with the Right Crank Menu (RCM).
+-- You can add or take away from here, although your menu will start to 
+-- misbehave if you have too few to fill the screen. But in that case, you 
+-- can make them bigger below.
 RightCrankMenu.menu_titles = 
-{{"Look",       "look.png"},
+{
+  {"Look",      "look.png"},
   {"Talk",      "talk.png"},
   {"Fight",     "fight.png"},
   {"Magic",     "magic.png"},
@@ -15,26 +73,42 @@ RightCrankMenu.menu_titles =
   {"Inventory", "items.png"},
   {"Quest Log", "quests.png"},
   {"Game Files","files.png"},
-  {"Settings",  "settings.png"}}
+  {"Settings",  "settings.png"}
+}
 
--- The number of icons in the menu may get larger later, I dunno
---menu_length = table.maxn(menu_titles)
+-- Crank icon dimensions (including borders)
+-- You can set these freely (within reason).
+-- Rectangles are okay.
+RightCrankMenu.Ico_W = 40
+RightCrankMenu.Ico_H = 40
 
+-- This is the offset of the selection box from the top of the screen.
+-- Can be set as a fraction of the screen size, or an absolute value.
+-- You could even adjust it in real time to make the icons harder to 
+-- select in game, if you wanted :-)
+RightCrankMenu.offset = (Scr_H - RightCrankMenu.Ico_H) / 2
+--RightCrankMenu.offset = 0
+
+-- The angle through which to move the crank to select the next icon
+-- Adjust in real-time if your PC quaffs too many potions of beer
+RightCrankMenu.icon_shift_angle = 60  
 
 -- the click wheel menu is active by default
 RightCrankMenu.active = true
+
+-------------------------------------------------------------------------------------
+------- END CONFIGURATION -----------------------------------------------------------
+-------------------------------------------------------------------------------------
+
+
+-- Below here you hopefully don't need to change
+-- if you change the start icon, you need to set the initial RightCrankMenu.amgle to match
 RightCrankMenu.current_icon = RightCrankMenu.menu_titles[1][1]
-
-
--- Set the initial icon to number 0 (Look)
-RightCrankMenu.offset = 0
-
--- max value should be height of icon x number of icons
-RightCrankMenu.maxval = 60 * #RightCrankMenu.menu_titles
-
-RightCrankMenu.full_rotation_angle = #RightCrankMenu.menu_titles * 12 * 5  -- 5 steps per icon, 8 degrees per step
-RightCrankMenu.crank_angle = 0
 RightCrankMenu.angle = 0
+
+-- below are internal use
+RightCrankMenu.full_rotation_angle = #RightCrankMenu.menu_titles * RightCrankMenu.icon_shift_angle
+RightCrankMenu.crank_angle = 0
 
 function RightCrankMenu.load()
     for index,value in ipairs(RightCrankMenu.menu_titles) do
@@ -43,57 +117,47 @@ function RightCrankMenu.load()
 end
 
 function RightCrankMenu.draw()
-    -- Crank-selected Menu Main Box Outline
-    love.graphics.rectangle("line",2,2,116,236)
 
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
         RightCrankMenu.draw_icon(RightCrankMenu.menu_titles[index][3],index-1)
     end
 
-    -- Hacky "active icon" selector box here
+    -- "active icon" selector box here
     if RightCrankMenu.active then
-        love.graphics.rectangle("line",360,100,40,40)
-        love.graphics.rectangle("line",361,101,39,39)
+        love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W,RightCrankMenu.offset,RightCrankMenu.Ico_W,RightCrankMenu.Ico_H)
+        love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W+1,RightCrankMenu.offset+1,RightCrankMenu.Ico_W-2,RightCrankMenu.Ico_H-2)
     end
 end
 
---[[
-┌┬┐┬─┐┌─┐┬ ┬    ┬┌─┐┌─┐┌┐┌
- ││├┬┘├─┤│││    ││  │ ││││
-─┴┘┴└─┴ ┴└┴┘────┴└─┘└─┘┘└┘
-    draw_icon does just that: draws a single icon to the right crank menu.
-    There's no reason this shouldn't just iterate through the table of 
-    icons, though; I'll change that in the next revision.
-]]
 function RightCrankMenu.draw_icon(icon, order)
-  --[[
-  crank_offset ranges between 0 and 239 (really 232), but we add 2
-  to that to give the icons a buffer from the top, and add another
-  100 to shift our first icon into the centered selection box.
   
-    ONLY UPDATES WHEN RCM IS IN FOCUS!
-  ]]
+  local angle = RightCrankMenu.angle
   
-  -- calculate the offset from the crank angle
-  local offset = Crank.get_angle() * (-2/3)
-  
-  --offset = RightCrankMenu.angle * (-2/3)
-  offset = -RightCrankMenu.angle
+  angle = -angle -- invert controls
 
-  local y = ((order*60)+offset+102)%RightCrankMenu.maxval
-  local x = 362+((100-y)^2)/1000
-  
-  if (y >= RightCrankMenu.maxval-40) then
-    -- x2 is a temporary variable to keep the icons on the curve
-    -- the the top and bottom of the screen
-    x2 = 362+((100-(y-RightCrankMenu.maxval))^2)/1000
-    love.graphics.rectangle("line",x2,y-RightCrankMenu.maxval,36,36)
-    love.graphics.draw(icon,x2+1,y-RightCrankMenu.maxval)
+  local function get_y_from_angle(angle, order)
+    local y = (order + (angle/RightCrankMenu.icon_shift_angle)) * RightCrankMenu.Ico_H
+    y = y + RightCrankMenu.offset
+    return y
   end
-
-  love.graphics.rectangle("line",x,y%RightCrankMenu.maxval,36,36)
-  love.graphics.draw(icon,x+1,y%RightCrankMenu.maxval)
+  
+  local y = get_y_from_angle(angle, order)
+  
+  if y-RightCrankMenu.Ico_H > Scr_H then
+    -- if y is right off the bottom of the screen, we should recalculate it in case it is at the top
+    angle = angle - RightCrankMenu.full_rotation_angle
+    y = get_y_from_angle(angle, order)
+  elseif y+RightCrankMenu.Ico_H < 0 then
+    -- if y is right off the top of the screen, we should recalculate it in case it is at the bottom
+    angle = angle + RightCrankMenu.full_rotation_angle
+    y = get_y_from_angle(angle, order)
+  end
+  
+  local x = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y)^2)/1000
+  
+  love.graphics.draw(icon,x,y)
+  love.graphics.rectangle("line",x,y,RightCrankMenu.Ico_W,RightCrankMenu.Ico_H)
   
 end
     
@@ -124,29 +188,39 @@ function RightCrankMenu.update(dt)
         if angle_delta ~= 0 then
             debug_delta = angle_delta
         end
-        
     end        
 end
+
+local debug_icon = 0
 
 function RightCrankMenu.debug_print()
     love.graphics.print({{255,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
     love.graphics.print({{255,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
     love.graphics.print({{255,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
+    love.graphics.print({{255,0,0,255},"icon: ",{255,0,0,255},debug_icon },125,100)
 end
 
 function RightCrankMenu.get_active_icon()
   
-  -- calculate the offset from the crank angle
-  local offset = Crank.get_angle() * (-2/3)
-    
-  --offset = RightCrankMenu.angle * (-2/3) 
-  offset = -RightCrankMenu.angle
-    
-  local icon_selection = ((RightCrankMenu.maxval - offset)/60) % #RightCrankMenu.menu_titles
+  local icon_selection = RightCrankMenu.angle / RightCrankMenu.icon_shift_angle
   
+  -- This is going to be trouble with an actual crank, because currently it is relying on lining the
+  -- icons up exactly in order to allow the selection to happen. That's okay with keys or with a 
+  -- clicky USB knob with a set number of clicks per rotation, but it's not going to work with
+  -- the playdate crank. Some effort required here.
   if icon_selection%1 == 0 then
     RightCrankMenu.current_icon = RightCrankMenu.menu_titles[icon_selection+1]
   end
+  
+  -- this is one possible approach - but this selects the nearest icon, not 
+  -- the last icon to have occupied the selection box
+  --[[
+  icon_selection = math.floor(icon_selection+0.5)
+  RightCrankMenu.current_icon = RightCrankMenu.menu_titles[icon_selection+1]
+  --]]
+  
+  
+  debug_icon = icon_selection
   
   return RightCrankMenu.current_icon
 end
