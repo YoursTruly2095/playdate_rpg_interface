@@ -65,15 +65,15 @@ local RightCrankMenu = {}
 -- can make them bigger below.
 RightCrankMenu.menu_titles = 
 {
-  {"Look",      "look.png"},
-  {"Talk",      "talk.png"},
-  {"Fight",     "fight.png"},
-  {"Magic",     "magic.png"},
-  {"Gear",      "equipment.png"},
-  {"Inventory", "items.png"},
-  {"Quest Log", "quests.png"},
-  {"Game Files","files.png"},
-  {"Settings",  "settings.png"}
+  {"Look",      "graphics/look.png"},
+  {"Talk",      "graphics/talk.png"},
+  {"Fight",     "graphics/fight.png"},
+  {"Magic",     "graphics/magic.png"},
+  {"Gear",      "graphics/equipment.png"},
+  {"Inventory", "graphics/items.png"},
+  {"Quest Log", "graphics/quests.png"},
+  {"Game Files","graphics/files.png"},
+  {"Settings",  "graphics/settings.png"}
 }
 
 -- Crank icon dimensions (including borders)
@@ -86,8 +86,8 @@ RightCrankMenu.Ico_H = 40
 -- Can be set as a fraction of the screen size, or an absolute value.
 -- You could even adjust it in real time to make the icons harder to 
 -- select in game, if you wanted :-)
-RightCrankMenu.offset = (Scr_H - RightCrankMenu.Ico_H) / 2
---RightCrankMenu.offset = 0
+--RightCrankMenu.offset = (Scr_H - RightCrankMenu.Ico_H) / 2
+RightCrankMenu.offset = 100
 
 -- The angle through which to move the crank to select the next icon
 -- Adjust in real-time if your PC quaffs too many potions of beer
