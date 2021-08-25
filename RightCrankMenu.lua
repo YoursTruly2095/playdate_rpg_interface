@@ -65,15 +65,14 @@ local RightCrankMenu = {}
 -- can make them bigger below.
 RightCrankMenu.menu_titles = 
 {
-  {"Look",      "graphics/look.png"},
-  {"Talk",      "graphics/talk.png"},
-  {"Fight",     "graphics/fight.png"},
-  {"Magic",     "graphics/magic.png"},
-  {"Gear",      "graphics/equipment.png"},
-  {"Inventory", "graphics/items.png"},
-  {"Quest Log", "graphics/quests.png"},
-  {"Game Files","graphics/files.png"},
-  {"Settings",  "graphics/settings.png"}
+  {"Tidy",      "menu_graphics/tidy.png",      "menu_graphics/tidy_d.png"},
+  {"Kitchen",   "menu_graphics/kitchen.png",   "menu_graphics/kitchen_d.png"},
+  {"Bathroom",  "menu_graphics/bathroom.png",  "menu_graphics/bathroom_d.png"},
+  {"Cook",      "menu_graphics/cook.png",      ""},
+  {"Eat",       "menu_graphics/eat.png",       ""},
+  {"Sleep",     "menu_graphics/sleep.png",     ""},
+  {"Work",      "menu_graphics/work.png",      ""},
+  {"Play",      "menu_graphics/play.png",      ""},
 }
 
 -- Crank icon dimensions (including borders)
@@ -96,6 +95,18 @@ RightCrankMenu.icon_shift_angle = 60
 -- the click wheel menu is active by default
 RightCrankMenu.active = true
 
+function RightCrankMenu.enable_option(option)
+   if option <= #RightCrankMenu.menu_titles then
+       RightCrankMenu.menu_titles[option]["enabled"] = true
+   end
+end
+
+function RightCrankMenu.disable_option(option)
+   if option <= #RightCrankMenu.menu_titles then
+       RightCrankMenu.menu_titles[option]["enabled"] = false
+   end
+end
+
 -------------------------------------------------------------------------------------
 ------- END CONFIGURATION -----------------------------------------------------------
 -------------------------------------------------------------------------------------
@@ -112,7 +123,11 @@ RightCrankMenu.crank_angle = 0
 
 function RightCrankMenu.load()
     for index,value in ipairs(RightCrankMenu.menu_titles) do
-        RightCrankMenu.menu_titles[index][3] = love.graphics.newImage(RightCrankMenu.menu_titles[index][2])
+        RightCrankMenu.menu_titles[index]["icon"] = love.graphics.newImage(RightCrankMenu.menu_titles[index][2])
+        if RightCrankMenu.menu_titles[index][3] ~= "" then
+            RightCrankMenu.menu_titles[index]["icon_d"] = love.graphics.newImage(RightCrankMenu.menu_titles[index][3])
+        end
+        RightCrankMenu.menu_titles[index]["enabled"] = true 
     end
 end
 
@@ -120,7 +135,9 @@ function RightCrankMenu.draw()
 
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
-        RightCrankMenu.draw_icon(RightCrankMenu.menu_titles[index][3],index-1)
+        local icon = "icon"
+        if not RightCrankMenu.menu_titles[index]["enabled"] then icon = "icon_d" end
+        RightCrankMenu.draw_icon(RightCrankMenu.menu_titles[index][icon],index-1)
     end
 
     -- "active icon" selector box here
@@ -224,5 +241,18 @@ function RightCrankMenu.get_active_icon()
   
   return RightCrankMenu.current_icon
 end
+
+function RightCrankMenu.keypressed(key)
+    
+    local consumed = false
+    
+    if key == " " then
+      consumed = true
+      print("space")
+    end
+    
+    return consumed
+end
+
 
 return RightCrankMenu
