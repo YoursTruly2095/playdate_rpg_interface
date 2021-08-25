@@ -55,6 +55,7 @@ local Crank = require("crank")
 
 local RightCrankMenu = {}
 
+--local Flat = require("flat")
 -------------------------------------------------------------------------------------
 ------- CONFIGURATION ---------------------------------------------------------------
 -------------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ local RightCrankMenu = {}
 -- can make them bigger below.
 RightCrankMenu.menu_titles = 
 {
-  {"Tidy",      "menu_graphics/tidy.png",      "menu_graphics/tidy_d.png"},
+  {"Tidy",      "menu_graphics/tidy.png",      "menu_graphics/tidy_d.png", --[[fn=function(x) Flat.tidy_up_flat(x) end--]]},
   {"Kitchen",   "menu_graphics/kitchen.png",   "menu_graphics/kitchen_d.png"},
   {"Bathroom",  "menu_graphics/bathroom.png",  "menu_graphics/bathroom_d.png"},
   {"Cook",      "menu_graphics/cook.png",      ""},
@@ -89,7 +90,7 @@ RightCrankMenu.Ico_H = 40
 RightCrankMenu.offset = 100
 
 -- The angle through which to move the crank to select the next icon
--- Adjust in real-time if your PC quaffs too many potions of beer
+-- Adjust in real-time if your player character quaffs too many potions of beer
 RightCrankMenu.icon_shift_angle = 60  
 
 -- the click wheel menu is active by default
@@ -106,6 +107,13 @@ function RightCrankMenu.disable_option(option)
        RightCrankMenu.menu_titles[option]["enabled"] = false
    end
 end
+
+function RightCrankMenu.register_function(option, fn)
+   if option <= #RightCrankMenu.menu_titles then
+       RightCrankMenu.menu_titles[option]["fn"] = fn
+   end
+end
+
 
 -------------------------------------------------------------------------------------
 ------- END CONFIGURATION -----------------------------------------------------------
@@ -242,16 +250,12 @@ function RightCrankMenu.get_active_icon()
   return RightCrankMenu.current_icon
 end
 
-function RightCrankMenu.keypressed(key)
+function RightCrankMenu.select(arg)
     
-    local consumed = false
-    
-    if key == " " then
-      consumed = true
-      print("space")
+    local icon = RightCrankMenu.get_active_icon()
+    if icon["enabled"] == true and icon["fn"] ~= nil then
+          icon["fn"](arg)
     end
-    
-    return consumed
 end
 
 
