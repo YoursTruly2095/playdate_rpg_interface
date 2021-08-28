@@ -4,6 +4,11 @@ A basic crank-centric menu template for Playdate console RPGs.
 
 Based on ConfidentFloor6601/playdate_rpg_interface
 
+NOTE! If you just run the code you'll see the menu behaves a bit strangely.
+This is because it is set up to test all the options below! In particular,
+the twitchiness of the look icon will be resolved when you cast magic 
+(among other things...)
+
 Some configuration options are available 
 1) Number of icons in the menu
 2) Size of icons
@@ -14,9 +19,9 @@ Graphics loading is the responsibility of the caller. Check out main.lua
 for an example of how to set this up easily.
 
 Register icons with the menu using 
-
+```
   RightCrankMenu.register_icon(icon)
-  
+```  
 'icon' is a table with the following entries:
 ```
 {
