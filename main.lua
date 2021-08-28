@@ -110,6 +110,7 @@ local menu_options =
             name='look',
             fn=function(x) look() end,   
             ['icon']="menu_graphics/look.png",
+            ['shift_ratio'] = 0.2,
         },
     },
     {
@@ -118,6 +119,7 @@ local menu_options =
             fn=function(x) talk() end,  
             ['icon']="menu_graphics/talk.png",
             ['disabled_icon']="menu_graphics/talk_d.png",
+            ['enabled'] = false,
         },
     },
     {
@@ -216,8 +218,7 @@ function love.load()
     -- register the icons with the menu
     -- they're all enabled to start with 
     for _,value in ipairs(menu_options) do
-        local enabled = true
-        RCM.register_icon(value[1], enabled)
+        RCM.register_icon(value[1])             
     end
   
     -- except lets disable 'talk'
@@ -299,7 +300,9 @@ end
 function magic()
     print_message("You magic up a sword - now fight!")    
     -- insert the fight option into the menu after 'talk'
-    RCM.register_icon(fight_option, true, 'inventory')
+    fight_option['after'] = 'talk'
+    fight_option['shift_ratio'] = 2
+    RCM.register_icon(fight_option)   -- insert 'fight' after talk, and require 120 degrees crank to move past it
 end
 
 function equipment()

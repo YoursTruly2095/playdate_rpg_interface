@@ -91,7 +91,23 @@ RightCrankMenu.angle = 0
 RightCrankMenu.current_icon = nil 
 RightCrankMenu.full_rotation_angle = 0
 
-function RightCrankMenu.register_icon(icon, enabled, after)
+function RightCrankMenu.register_icon(icon)
+    
+    -- set up defaults for options
+    local after = nil     -- default to end of table
+    local shift_angle = RightCrankMenu.default_icon_shift_angle
+    
+    -- handle options 
+    if icon['enabled'] == nil then icon['enabled'] = true end
+    
+    if icon['after'] ~= nil then 
+        after = icon['after']
+        icon['after'] = nil
+    end
+    
+    if icon['shift_ratio'] == nil then icon['shift_ratio'] = 1 end
+    
+    -- if this is the first option added, set it to the 'current' option
     if #RightCrankMenu.menu_titles == 0 then 
         RightCrankMenu.current_icon = 1
     end
@@ -112,7 +128,6 @@ function RightCrankMenu.register_icon(icon, enabled, after)
     
     table.insert(RightCrankMenu.menu_titles, index, icon)
     
-    RightCrankMenu.menu_titles[index]['enabled'] = enabled
     RightCrankMenu.full_rotation_angle = RightCrankMenu.full_rotation_angle + RightCrankMenu.icon_shift_angle
     
     -- correct for an icon inserted before our current selection in the menu
@@ -170,6 +185,7 @@ function RightCrankMenu.load()
     end
 end
 --]]
+
 
 function RightCrankMenu.draw()
 
@@ -239,6 +255,12 @@ function RightCrankMenu.update(dt)
         if math.abs(angle_delta) > 180 then
             -- assume overflow and the crank went the short way to this new angle
             if angle_delta > 0 then angle_delta = angle_delta - 360 else angle_delta = angle_delta + 360 end
+        end
+        
+        -- adjust delta based on the angle ratio for the current icon
+        local current = RightCrankMenu.get_active_icon()
+        if current then
+            angle_delta = angle_delta / current['shift_ratio']
         end
         
         RightCrankMenu.angle = (RightCrankMenu.angle + angle_delta) % RightCrankMenu.full_rotation_angle
