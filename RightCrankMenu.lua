@@ -55,7 +55,6 @@ local Crank = require("crank")
 
 local RightCrankMenu = {}
 
---local Flat = require("flat")
 -------------------------------------------------------------------------------------
 ------- CONFIGURATION ---------------------------------------------------------------
 -------------------------------------------------------------------------------------
@@ -64,17 +63,7 @@ local RightCrankMenu = {}
 -- You can add or take away from here, although your menu will start to 
 -- misbehave if you have too few to fill the screen. But in that case, you 
 -- can make them bigger below.
-RightCrankMenu.menu_titles = 
-{
-  {"Tidy",      "menu_graphics/tidy.png",      "menu_graphics/tidy_d.png", --[[fn=function(x) Flat.tidy_up_flat(x) end--]]},
-  {"Kitchen",   "menu_graphics/kitchen.png",   "menu_graphics/kitchen_d.png"},
-  {"Bathroom",  "menu_graphics/bathroom.png",  "menu_graphics/bathroom_d.png"},
-  {"Cook",      "menu_graphics/cook.png",      ""},
-  {"Eat",       "menu_graphics/eat.png",       ""},
-  {"Sleep",     "menu_graphics/sleep.png",     ""},
-  {"Work",      "menu_graphics/work.png",      ""},
-  {"Play",      "menu_graphics/play.png",      ""},
-}
+RightCrankMenu.menu_titles = {}
 
 -- Crank icon dimensions (including borders)
 -- You can set these freely (within reason).
@@ -96,24 +85,36 @@ RightCrankMenu.icon_shift_angle = 60
 -- the click wheel menu is active by default
 RightCrankMenu.active = true
 
+
+RightCrankMenu.current_icon = nil 
+RightCrankMenu.full_rotation_angle = 0
+
+function RightCrankMenu.register_icon(index, icon, enabled)
+    if #RightCrankMenu.menu_titles == 0 then 
+        RightCrankMenu.current_icon = index
+    end
+    table.insert(RightCrankMenu.menu_titles, index, icon)
+    
+    RightCrankMenu.menu_titles[index]['enabled'] = enabled
+    RightCrankMenu.full_rotation_angle = RightCrankMenu.full_rotation_angle + RightCrankMenu.icon_shift_angle
+end
+
+
 function RightCrankMenu.enable_option(option)
-   if option <= #RightCrankMenu.menu_titles then
-       RightCrankMenu.menu_titles[option]["enabled"] = true
-   end
+    for index,value in ipairs(RightCrankMenu.menu_titles) do
+        if value['name'] == option then
+            value['enabled'] = true
+        end
+    end
 end
 
 function RightCrankMenu.disable_option(option)
-   if option <= #RightCrankMenu.menu_titles then
-       RightCrankMenu.menu_titles[option]["enabled"] = false
-   end
+    for index,value in ipairs(RightCrankMenu.menu_titles) do
+        if value['name'] == option then
+            value['enabled'] = false
+        end
+    end
 end
-
-function RightCrankMenu.register_function(option, fn)
-   if option <= #RightCrankMenu.menu_titles then
-       RightCrankMenu.menu_titles[option]["fn"] = fn
-   end
-end
-
 
 -------------------------------------------------------------------------------------
 ------- END CONFIGURATION -----------------------------------------------------------
@@ -122,13 +123,12 @@ end
 
 -- Below here you hopefully don't need to change
 -- if you change the start icon, you need to set the initial RightCrankMenu.amgle to match
-RightCrankMenu.current_icon = RightCrankMenu.menu_titles[1][1]
 RightCrankMenu.angle = 0
 
 -- below are internal use
-RightCrankMenu.full_rotation_angle = #RightCrankMenu.menu_titles * RightCrankMenu.icon_shift_angle
 RightCrankMenu.crank_angle = 0
 
+--[[
 function RightCrankMenu.load()
     for index,value in ipairs(RightCrankMenu.menu_titles) do
         RightCrankMenu.menu_titles[index]["icon"] = love.graphics.newImage(RightCrankMenu.menu_titles[index][2])
@@ -138,13 +138,14 @@ function RightCrankMenu.load()
         RightCrankMenu.menu_titles[index]["enabled"] = true 
     end
 end
+--]]
 
 function RightCrankMenu.draw()
 
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
         local icon = "icon"
-        if not RightCrankMenu.menu_titles[index]["enabled"] then icon = "icon_d" end
+        if not RightCrankMenu.menu_titles[index]["enabled"] then icon = "disabled_icon" end
         RightCrankMenu.draw_icon(RightCrankMenu.menu_titles[index][icon],index-1)
     end
 
@@ -234,20 +235,20 @@ function RightCrankMenu.get_active_icon()
   -- clicky USB knob with a set number of clicks per rotation, but it's not going to work with
   -- the playdate crank. Some effort required here.
   if icon_selection%1 == 0 then
-    RightCrankMenu.current_icon = RightCrankMenu.menu_titles[icon_selection+1]
+    RightCrankMenu.current_icon = icon_selection+1
   end
   
   -- this is one possible approach - but this selects the nearest icon, not 
   -- the last icon to have occupied the selection box
   --[[
   icon_selection = math.floor(icon_selection+0.5)
-  RightCrankMenu.current_icon = RightCrankMenu.menu_titles[icon_selection+1]
+  RightCrankMenu.current_icon = icon_selection+1
   --]]
   
   
   debug_icon = icon_selection
   
-  return RightCrankMenu.current_icon
+  return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
 end
 
 function RightCrankMenu.select(arg)
