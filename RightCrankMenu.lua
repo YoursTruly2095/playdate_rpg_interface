@@ -251,11 +251,11 @@ function RightCrankMenu.get_active_icon()
   return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
 end
 
-function RightCrankMenu.select(arg)
+function RightCrankMenu.select(args)
     
     local icon = RightCrankMenu.get_active_icon()
     if icon["enabled"] == true and icon["fn"] ~= nil then
-          icon["fn"](arg)
+          icon["fn"](args)
     end
 end
 

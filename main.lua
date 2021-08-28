@@ -84,7 +84,7 @@ wanting to code in lua.
 
 require("globals")
 
-RightCrankMenu = require("RightCrankMenu")
+RCM = require("RightCrankMenu")
 Crank = require("crank")
 
 
@@ -93,6 +93,77 @@ Crank = require("crank")
 -- Using the default font until I find something better
 love.graphics.setNewFont(18)
 
+
+-- a flag to demonstrate icons being enabled and disabled
+local can_talk = false
+local menu_message = ""
+
+--[[ 
+
+    Menu Definition
+--]]
+
+local menu_options = 
+{
+    {
+        {
+            name='look',
+            fn=function(x) look() end,   
+            ['icon']="menu_graphics/look.png",
+        },
+    },
+    {
+        {
+            name='talk',    
+            fn=function(x) talk() end,  
+            ['icon']="menu_graphics/talk.png",
+            ['disabled_icon']="menu_graphics/talk_d.png",
+        },
+    },
+    {
+        {
+            name='fight',   
+            fn=function(x) print_message("You attack! Viciously!!") end, 
+            ['icon']="menu_graphics/fight.png",
+        },
+    },
+    {
+        {
+            name='magic',       
+            fn=function(x) print_message("You cast a spell") end,      
+            ['icon']="menu_graphics/magic.png",
+        },
+    },
+    {
+        {
+            name='inventory',        
+            fn=function(x) print_message("You rifle through your belongings") end,       
+            ['icon']="menu_graphics/items.png",
+        }
+    },
+    {
+        {
+            name='equipment',        
+            fn=function(x) print_message("You rearrange your gear") end,      
+            ['icon']="menu_graphics/equipment.png",
+        }
+    },
+    {
+        {
+            name='settings',       
+            fn=function(x) print_message("You access a meta-physical menu in another world") end,     
+            ['icon']="menu_graphics/settings.png",
+        }
+    },
+    {
+        {
+            name='files',       
+            fn=function(x) print_message("Monika already got your files") end,   
+            ['icon']="menu_graphics/files.png",
+        }
+    },
+}
+    
 
 
 --[[
@@ -114,25 +185,47 @@ the functions run before love.draw there are no guarantees.
 ]]
 
 function love.load()
-  print(_VERSION)
-  
-  -- Final version will be 1-bit color, but red == unfinished
-  love.graphics.setBackgroundColor(0,0,0,255)
-  
-  -- Playdate screen should be 400x240. 
-  -- Might add magnification factor for pixel doubling on PC
-  love.window.setMode(Scr_W,Scr_H,{resizable=false})
-  love.window.setTitle("Your Game Title Here")
+    
+    -- stuff for debugging in zerobrane
+    -- comment this stuff out if you don't need it
+    if arg[#arg] == "-debug" then require("mobdebug").start() end
+    io.stdout:setvbuf("no")
+    
+    
+    print(_VERSION)
 
-  -- load the menu stuff
-  RightCrankMenu.load()
+    -- Final version will be 1-bit color, but red == unfinished
+    love.graphics.setBackgroundColor(0,0,0,255)
+
+    -- Playdate screen should be 400x240. 
+    -- Might add magnification factor for pixel doubling on PC
+    love.window.setMode(Scr_W,Scr_H,{resizable=false})
+    love.window.setTitle("Your Game Title Here")
+
+    -- load the menu icons
+    -- this repaces the file names in the data structure in the code, with the actual loaded icons
+    for index,value in ipairs(menu_options) do
+        value[1]['icon']=love.graphics.newImage(value[1]['icon'])
+        if value[1]['disabled_icon'] then
+            value[1]['disabled_icon']=love.graphics.newImage(value[1]['disabled_icon'])
+        end
+    end
+    
+    -- register the icons with the menu
+    -- they're all enabled to start with 
+    for index,value in ipairs(menu_options) do
+        local enabled = true
+        RCM.register_icon(index, value[1], enabled)
+    end
   
+    -- except lets disable 'talk'
+    RCM.disable_option('talk')
 
 end
 
 
 function love.update(dt)
-    RightCrankMenu.update(dt)
+    RCM.update(dt)
 end
 
 
@@ -143,11 +236,11 @@ end
 ]]
 function love.draw()
   
-  RightCrankMenu.draw()
+  RCM.draw()
   
 
   -- Crank-selected Menu Main Box Outline
-  love.graphics.rectangle("line",2,2,116,236)
+  love.graphics.rectangle("line",2,2,116,192)
     
     
   -- Any text goes down here
@@ -157,7 +250,11 @@ function love.draw()
     Debuggery here
   ]]
   Crank.debug_print()
-  RightCrankMenu.debug_print()
+  RCM.debug_print()
+  
+  -- print a message from the menu
+  love.graphics.print({{255,0,0,255},menu_message},0,200)
+  
   
 end
 
@@ -174,12 +271,28 @@ end
 ]]
 function print_selected_icon()
   
-  local icon_data = RightCrankMenu.get_active_icon()
-  love.graphics.printf(icon_data[1],0,3,120,"center")
+  local icon_data = RCM.get_active_icon()
+  love.graphics.printf(icon_data['name'],0,3,120,"center")
 
 end
 
+function print_message(message)
+  
+  menu_message=message
 
+end
+
+function look()
+    print_message("You looked, so now you can talk") 
+    can_talk = true    
+    RCM.enable_option("talk")
+end
+
+function talk()
+    print_message("You talk, so now you must look") 
+    can_talk = false    
+    RCM.disable_option("talk")
+end
 
 --[[
 ┬  ┌─┐┬  ┬┌─┐ ┬┌─┌─┐┬ ┬┌─┐┬─┐┌─┐┌─┐┌─┐┌─┐┌┬┐
@@ -193,17 +306,19 @@ end
   Each click is 12' +/- previous value
 ]]
 function love.keypressed(key)
-  
   local consumed = Crank.keypressed(key)
   if not consumed then
     --handle other keypresses
-    if RightCrankMenu.is_active() then
+    if RCM.is_active() then
       if key == "a" or key == "left" then
-        RightCrankMenu.set_active(false)
+        RCM.set_active(false)
+      end
+      if key == "space" then
+        RCM.select(nil)
       end
     else
       if key == "d" or key == "right" then
-        RightCrankMenu.set_active(true)
+        RCM.set_active(true)
       end
     end  
   end
