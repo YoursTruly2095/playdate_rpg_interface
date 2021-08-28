@@ -109,52 +109,52 @@ local menu_options =
         {
             name='look',
             fn=function(x) look() end,   
-            ['icon']="menu_graphics/look.png",
-            ['shift_ratio'] = 0.2,
+            icon="menu_graphics/look.png",
+            shift_ratio = 0.2,
         },
     },
     {
         {
             name='talk',    
             fn=function(x) talk() end,  
-            ['icon']="menu_graphics/talk.png",
-            ['disabled_icon']="menu_graphics/talk_d.png",
-            ['enabled'] = false,
+            icon="menu_graphics/talk.png",
+            disabled_icon="menu_graphics/talk_d.png",
+            enabled = false,
         },
     },
     {
         {
             name='magic',       
             fn=function(x) magic() end,      
-            ['icon']="menu_graphics/magic.png",
+            icon="menu_graphics/magic.png",
         },
     },
     {
         {
             name='inventory',        
             fn=function(x) print_message("You rifle through your belongings") end,       
-            ['icon']="menu_graphics/items.png",
+            icon="menu_graphics/items.png",
         }
     },
     {
         {
             name='equipment',        
             fn=function(x) equipment() end,      
-            ['icon']="menu_graphics/equipment.png",
+            icon="menu_graphics/equipment.png",
         }
     },
     {
         {
             name='settings',       
             fn=function(x) print_message("You access a meta-physical menu in another world") end,     
-            ['icon']="menu_graphics/settings.png",
+            icon="menu_graphics/settings.png",
         }
     },
     {
         {
             name='files',       
             fn=function(x) print_message("Monika already got your files") end,   
-            ['icon']="menu_graphics/files.png",
+            icon="menu_graphics/files.png",
         }
     },
 }
@@ -163,7 +163,7 @@ local fight_option =
 {
     name='fight',   
     fn=function(x) print_message("You attack! Viciously!!") end, 
-    ['icon']="menu_graphics/fight.png",
+    icon="menu_graphics/fight.png",
 }
 
 
@@ -220,10 +220,6 @@ function love.load()
     for _,value in ipairs(menu_options) do
         RCM.register_icon(value[1])             
     end
-  
-    -- except lets disable 'talk'
-    RCM.disable_option('talk')
-
 end
 
 
@@ -288,13 +284,13 @@ end
 function look()
     print_message("You looked, so now you can talk") 
     can_talk = true    
-    RCM.enable_option("talk")
+    RCM.enable_icon("talk")
 end
 
 function talk()
     print_message("You talk, so now you must look") 
     can_talk = false    
-    RCM.disable_option("talk")
+    RCM.disable_icon("talk")
 end
 
 function magic()
@@ -303,6 +299,10 @@ function magic()
     fight_option['after'] = 'talk'
     fight_option['shift_ratio'] = 2
     RCM.register_icon(fight_option)   -- insert 'fight' after talk, and require 120 degrees crank to move past it
+
+    -- set ratio for 'look' back to 1 
+    RCM.set_shift_ratio('look', 1)
+    
 end
 
 function equipment()

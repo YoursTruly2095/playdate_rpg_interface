@@ -149,22 +149,29 @@ function RightCrankMenu.remove_icon(name)
     end
 end
 
-function RightCrankMenu.enable_option(option)
+function RightCrankMenu.enable_icon(name)
     for index,value in ipairs(RightCrankMenu.menu_titles) do
-        if value['name'] == option then
+        if value['name'] == name then
             value['enabled'] = true
         end
     end
 end
 
-function RightCrankMenu.disable_option(option)
+function RightCrankMenu.disable_icon(name)
     for index,value in ipairs(RightCrankMenu.menu_titles) do
-        if value['name'] == option then
+        if value['name'] == name then
             value['enabled'] = false
         end
     end
 end
 
+function RightCrankMenu.set_shift_ratio(name, ratio)
+    for index,value in ipairs(RightCrankMenu.menu_titles) do
+        if value['name'] == name then
+            value['shift_ratio'] = ratio
+        end
+    end
+end
 -------------------------------------------------------------------------------------
 ------- END CONFIGURATION -----------------------------------------------------------
 -------------------------------------------------------------------------------------
