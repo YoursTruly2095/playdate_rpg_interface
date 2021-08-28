@@ -122,15 +122,8 @@ local menu_options =
     },
     {
         {
-            name='fight',   
-            fn=function(x) print_message("You attack! Viciously!!") end, 
-            ['icon']="menu_graphics/fight.png",
-        },
-    },
-    {
-        {
             name='magic',       
-            fn=function(x) print_message("You cast a spell") end,      
+            fn=function(x) magic() end,      
             ['icon']="menu_graphics/magic.png",
         },
     },
@@ -144,7 +137,7 @@ local menu_options =
     {
         {
             name='equipment',        
-            fn=function(x) print_message("You rearrange your gear") end,      
+            fn=function(x) equipment() end,      
             ['icon']="menu_graphics/equipment.png",
         }
     },
@@ -164,6 +157,12 @@ local menu_options =
     },
 }
     
+local fight_option = 
+{
+    name='fight',   
+    fn=function(x) print_message("You attack! Viciously!!") end, 
+    ['icon']="menu_graphics/fight.png",
+}
 
 
 --[[
@@ -211,11 +210,14 @@ function love.load()
         end
     end
     
+    -- load the icon for the fight option too
+    fight_option['icon']=love.graphics.newImage(fight_option['icon'])
+    
     -- register the icons with the menu
     -- they're all enabled to start with 
-    for index,value in ipairs(menu_options) do
+    for _,value in ipairs(menu_options) do
         local enabled = true
-        RCM.register_icon(index, value[1], enabled)
+        RCM.register_icon(value[1], enabled)
     end
   
     -- except lets disable 'talk'
@@ -292,6 +294,18 @@ function talk()
     print_message("You talk, so now you must look") 
     can_talk = false    
     RCM.disable_option("talk")
+end
+
+function magic()
+    print_message("You magic up a sword - now fight!")    
+    -- insert the fight option into the menu after 'talk'
+    RCM.register_icon(fight_option, true, 'inventory')
+end
+
+function equipment()
+    print_message("You clumsily drop your sword(s)!!")
+    -- remove any 'fight' icons from the list    
+    RCM.remove_icon('fight')
 end
 
 --[[

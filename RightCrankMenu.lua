@@ -85,20 +85,54 @@ RightCrankMenu.icon_shift_angle = 60
 -- the click wheel menu is active by default
 RightCrankMenu.active = true
 
+-- if you change the start icon, you need to set the initial RightCrankMenu.angle to match
+RightCrankMenu.angle = 0
 
 RightCrankMenu.current_icon = nil 
 RightCrankMenu.full_rotation_angle = 0
 
-function RightCrankMenu.register_icon(index, icon, enabled)
+function RightCrankMenu.register_icon(icon, enabled, after)
     if #RightCrankMenu.menu_titles == 0 then 
-        RightCrankMenu.current_icon = index
+        RightCrankMenu.current_icon = 1
     end
+    
+    -- default to insert at the end of the menu
+    local index = #RightCrankMenu.menu_titles+1
+    local insert_angle = RightCrankMenu.full_rotation_angle
+    
+    -- if 'after' is specified, find the correct insertion index
+    if after ~= nil then 
+        for i,v in ipairs(RightCrankMenu.menu_titles) do
+            if v['name'] == after then
+                index = i+1
+                insert_angle = RightCrankMenu.icon_shift_angle*i
+            end
+        end
+    end
+    
     table.insert(RightCrankMenu.menu_titles, index, icon)
     
     RightCrankMenu.menu_titles[index]['enabled'] = enabled
     RightCrankMenu.full_rotation_angle = RightCrankMenu.full_rotation_angle + RightCrankMenu.icon_shift_angle
+    
+    -- correct for an icon inserted before our current selection in the menu
+    if RightCrankMenu.angle >= insert_angle then
+        RightCrankMenu.angle = RightCrankMenu.angle + RightCrankMenu.icon_shift_angle
+    end
 end
 
+function RightCrankMenu.remove_icon(name)
+    local menu = RightCrankMenu.menu_titles
+    for i=#menu, 1, -1 do
+        if menu[i]['name'] == name then
+            table.remove(menu, i)
+            if RightCrankMenu.angle >= i*RightCrankMenu.icon_shift_angle then
+                RightCrankMenu.angle = RightCrankMenu.angle - RightCrankMenu.icon_shift_angle
+            end
+            RightCrankMenu.full_rotation_angle = RightCrankMenu.full_rotation_angle - RightCrankMenu.icon_shift_angle
+        end
+    end
+end
 
 function RightCrankMenu.enable_option(option)
     for index,value in ipairs(RightCrankMenu.menu_titles) do
@@ -121,11 +155,8 @@ end
 -------------------------------------------------------------------------------------
 
 
--- Below here you hopefully don't need to change
--- if you change the start icon, you need to set the initial RightCrankMenu.amgle to match
-RightCrankMenu.angle = 0
 
--- below are internal use
+-- this is internal use
 RightCrankMenu.crank_angle = 0
 
 --[[
@@ -170,7 +201,7 @@ function RightCrankMenu.draw_icon(icon, order)
   
   local y = get_y_from_angle(angle, order)
   
-  if y-RightCrankMenu.Ico_H > Scr_H then
+  if y > Scr_H then
     -- if y is right off the bottom of the screen, we should recalculate it in case it is at the top
     angle = angle - RightCrankMenu.full_rotation_angle
     y = get_y_from_angle(angle, order)
