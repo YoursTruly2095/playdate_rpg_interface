@@ -47,7 +47,7 @@ Register icons with the menu using
 
 'after' is the name of the icon to insert this icon after in the menu. If not present the ison is inserted at the end
 
-'shift_ratio' is the ratio of angle required to move past this icons, compared with normal
+'shift_ratio' is the ratio of angle required to move past this icon, compared with normal
 
   
 Other API functions are
