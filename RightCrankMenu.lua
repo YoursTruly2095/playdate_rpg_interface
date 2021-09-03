@@ -172,6 +172,11 @@ function RightCrankMenu.set_shift_ratio(name, ratio)
         end
     end
 end
+
+function RightCrankMenu.register_selector(selector)
+    RightCrankMenu.selector = selector
+end
+
 -------------------------------------------------------------------------------------
 ------- END CONFIGURATION -----------------------------------------------------------
 -------------------------------------------------------------------------------------
@@ -205,8 +210,17 @@ function RightCrankMenu.draw()
 
     -- "active icon" selector box here
     if RightCrankMenu.active then
-        love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W,RightCrankMenu.offset,RightCrankMenu.Ico_W,RightCrankMenu.Ico_H)
-        love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W+1,RightCrankMenu.offset+1,RightCrankMenu.Ico_W-2,RightCrankMenu.Ico_H-2)
+        if RightCrankMenu.selector then
+            local selector = RightCrankMenu.selector
+            local w = selector:getWidth()
+            local h = selector:getHeight()
+            local x = Scr_W-RightCrankMenu.Ico_W - (w-RightCrankMenu.Ico_W)/2
+            local y = RightCrankMenu.offset - (h-RightCrankMenu.Ico_H)/2
+            love.graphics.draw(selector,x,y)
+        else
+            love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W,RightCrankMenu.offset,RightCrankMenu.Ico_W,RightCrankMenu.Ico_H)
+            love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W+1,RightCrankMenu.offset+1,RightCrankMenu.Ico_W-2,RightCrankMenu.Ico_H-2)
+        end
     end
 end
 
@@ -237,7 +251,6 @@ function RightCrankMenu.draw_icon(icon, order)
   local x = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y)^2)/1000
   
   love.graphics.draw(icon,x,y)
-  love.graphics.rectangle("line",x,y,RightCrankMenu.Ico_W,RightCrankMenu.Ico_H)
   
 end
     
@@ -280,10 +293,10 @@ end
 local debug_icon = 0
 
 function RightCrankMenu.debug_print()
-    love.graphics.print({{255,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
-    love.graphics.print({{255,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
-    love.graphics.print({{255,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
-    love.graphics.print({{255,0,0,255},"icon: ",{255,0,0,255},debug_icon },125,100)
+    love.graphics.print({{128,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
+    love.graphics.print({{128,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
+    love.graphics.print({{128,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
+    love.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},debug_icon },125,100)
 end
 
 function RightCrankMenu.get_active_icon()

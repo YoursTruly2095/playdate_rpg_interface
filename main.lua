@@ -109,7 +109,7 @@ local menu_options =
         {
             name='look',
             fn=function(x) look() end,   
-            icon="menu_graphics/look.png",
+            icon="menu_graphics/look_t.png",
             shift_ratio = 0.2,
         },
     },
@@ -117,7 +117,7 @@ local menu_options =
         {
             name='talk',    
             fn=function(x) talk() end,  
-            icon="menu_graphics/talk.png",
+            icon="menu_graphics/talk_t.png",
             disabled_icon="menu_graphics/talk_d.png",
             enabled = false,
         },
@@ -126,35 +126,35 @@ local menu_options =
         {
             name='magic',       
             fn=function(x) magic() end,      
-            icon="menu_graphics/magic.png",
+            icon="menu_graphics/magic_t.png",
         },
     },
     {
         {
             name='inventory',        
             fn=function(x) print_message("You rifle through your belongings") end,       
-            icon="menu_graphics/items.png",
+            icon="menu_graphics/items_t.png",
         }
     },
     {
         {
             name='equipment',        
             fn=function(x) equipment() end,      
-            icon="menu_graphics/equipment.png",
+            icon="menu_graphics/gear_t.png",
         }
     },
     {
         {
             name='settings',       
             fn=function(x) print_message("You access a meta-physical menu in another world") end,     
-            icon="menu_graphics/settings.png",
+            icon="menu_graphics/settings_t.png",
         }
     },
     {
         {
             name='files',       
             fn=function(x) print_message("Monika already got your files") end,   
-            icon="menu_graphics/files.png",
+            icon="menu_graphics/game_t.png",
         }
     },
 }
@@ -163,9 +163,10 @@ local fight_option =
 {
     name='fight',   
     fn=function(x) print_message("You attack! Viciously!!") end, 
-    icon="menu_graphics/fight.png",
+    icon="menu_graphics/fight_t.png",
 }
 
+local background
 
 --[[
 ╔═╗╦ ╦╔╗╔╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
@@ -196,7 +197,7 @@ function love.load()
     print(_VERSION)
 
     -- Final version will be 1-bit color, but red == unfinished
-    love.graphics.setBackgroundColor(0,0,0,255)
+    love.graphics.setBackgroundColor(1,1,1,255)
 
     -- Playdate screen should be 400x240. 
     -- Might add magnification factor for pixel doubling on PC
@@ -215,11 +216,18 @@ function love.load()
     -- load the icon for the fight option too
     fight_option['icon']=love.graphics.newImage(fight_option['icon'])
     
+    -- load the selctor
+    local selector = love.graphics.newImage("menu_graphics/selector.png")
+    RCM.register_selector(selector)
+    
     -- register the icons with the menu
-    -- they're all enabled to start with 
     for _,value in ipairs(menu_options) do
         RCM.register_icon(value[1])             
     end
+    
+    -- load the background image
+    background = love.graphics.newImage("menu_graphics/background.png")
+    
 end
 
 
@@ -235,45 +243,33 @@ end
 ]]
 function love.draw()
   
+  love.graphics.draw(background,0,0)
+  
   RCM.draw()
   
 
   -- Crank-selected Menu Main Box Outline
+  love.graphics.setColor(0,0,0,255)
   love.graphics.rectangle("line",2,2,116,192)
+  love.graphics.setColor(1,1,1,255)
     
     
   -- Any text goes down here
-  print_selected_icon()
+  local icon_data = RCM.get_active_icon()
+  love.graphics.printf({{0,0,0,255},icon_data['name']},0,3,120,"center")
   
+    -- print a message from the menu
+  love.graphics.print({{128,0,0,255},menu_message},0,200)
+
   --[[
     Debuggery here
   ]]
   Crank.debug_print()
   RCM.debug_print()
   
-  -- print a message from the menu
-  love.graphics.print({{255,0,0,255},menu_message},0,200)
-  
-  
 end
 
 
---[[
-┌─┐┬─┐┬┌┐┌┌┬┐   ┌─┐┌─┐┬  ┌─┐┌─┐┌┬┐┌─┐┌┬┐    ┬┌─┐┌─┐┌┐┌
-├─┘├┬┘││││ │    └─┐├┤ │  ├┤ │   │ ├┤  ││    ││  │ ││││
-┴  ┴└─┴┘└┘ ┴────└─┘└─┘┴─┘└─┘└─┘ ┴ └─┘─┴┘────┴└─┘└─┘┘└┘
-
-    print_selected_icon grabs the name of each icon from the RCM, and
-    prints it to the box located at the top of the LCM. This doesn't
-    activate that selection in the LCM, just displays it. To activate
-    the LCM (or give it focus) the user will have to press left.
-]]
-function print_selected_icon()
-  
-  local icon_data = RCM.get_active_icon()
-  love.graphics.printf(icon_data['name'],0,3,120,"center")
-
-end
 
 function print_message(message)
   
