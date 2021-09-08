@@ -319,22 +319,31 @@ end
   Each click is 12' +/- previous value
 ]]
 function love.keypressed(key)
-  local consumed = Crank.keypressed(key)
-  if not consumed then
-    --handle other keypresses
-    if RCM.is_active() then
-      if key == "a" or key == "left" then
-        RCM.set_active(false)
-      end
-      if key == "space" then
-        RCM.select(nil)
-      end
-    else
-      if key == "d" or key == "right" then
-        RCM.set_active(true)
-      end
-    end  
-  end
+  
+    local consumed = Crank.keypressed(key)
+
+    if not consumed then
+        --handle other keypresses
+        if RCM.is_active() then
+            if key == "a" or key == "left" then
+                RCM.set_active(false)
+            end
+            if key == "space" then
+                RCM.select(nil)
+            end
+        else
+            if key == "d" or key == "right" then
+                RCM.set_active(true)
+            end
+        end  
+        if key == "s" then
+            if RCM.is_hidden() then
+                RCM.show()
+            else
+                RCM.hide()
+            end
+        end
+    end
 
 end
 

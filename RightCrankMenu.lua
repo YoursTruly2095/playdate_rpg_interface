@@ -186,6 +186,8 @@ end
 -- this is internal use
 RightCrankMenu.crank_angle = 0
 
+RightCrankMenu.hidden = false
+
 --[[
 function RightCrankMenu.load()
     for index,value in ipairs(RightCrankMenu.menu_titles) do
@@ -198,8 +200,22 @@ function RightCrankMenu.load()
 end
 --]]
 
+local function calculate_animation_x(x)
+    local offscreen_x = Scr_W
+    local ratio = RightCrankMenu.get_animation_ratio()
+    if RightCrankMenu.animation_type == 'hide' then
+        x = x + (offscreen_x - x) * (ratio)
+    elseif RightCrankMenu.animation_type == 'show' then
+        x = x + (offscreen_x - x) * (1-ratio)
+    end
+    return x
+end
 
 function RightCrankMenu.draw()
+
+    if RightCrankMenu.hidden and not RightCrankMenu.animating then return end
+
+    
 
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
@@ -209,17 +225,35 @@ function RightCrankMenu.draw()
     end
 
     -- "active icon" selector box here
-    if RightCrankMenu.active then
+    
+    
+    if RightCrankMenu.active or RightCrankMenu.animating then
+        
+        local w, h, x, y
+        local selector
+        
         if RightCrankMenu.selector then
-            local selector = RightCrankMenu.selector
-            local w = selector:getWidth()
-            local h = selector:getHeight()
-            local x = Scr_W-RightCrankMenu.Ico_W - (w-RightCrankMenu.Ico_W)/2
-            local y = RightCrankMenu.offset - (h-RightCrankMenu.Ico_H)/2
+            selector = RightCrankMenu.selector
+            w = selector:getWidth()
+            h = selector:getHeight()
+            x = Scr_W-RightCrankMenu.Ico_W - (w-RightCrankMenu.Ico_W)/2
+            y = RightCrankMenu.offset - (h-RightCrankMenu.Ico_H)/2
+        else
+            w = RightCrankMenu.Ico_W
+            h = RightCrankMenu.Ico_H
+            x = Scr_W-RightCrankMenu.Ico_W
+            y = RightCrankMenu.offset
+        end
+        
+        if RightCrankMenu.animating then
+            x = calculate_animation_x(x)
+        end
+        
+        if RightCrankMenu.selector then
             love.graphics.draw(selector,x,y)
         else
-            love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W,RightCrankMenu.offset,RightCrankMenu.Ico_W,RightCrankMenu.Ico_H)
-            love.graphics.rectangle("line",Scr_W-RightCrankMenu.Ico_W+1,RightCrankMenu.offset+1,RightCrankMenu.Ico_W-2,RightCrankMenu.Ico_H-2)
+            love.graphics.rectangle("line",x,y,w,h)
+            love.graphics.rectangle("line",x+1,y+1,w-2,h-2)
         end
     end
 end
@@ -250,6 +284,11 @@ function RightCrankMenu.draw_icon(icon, order)
   
   local x = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y)^2)/1000
   
+    if RightCrankMenu.animating then
+        x = calculate_animation_x(x)
+    end
+  
+  
   love.graphics.draw(icon,x,y)
   
 end
@@ -267,6 +306,8 @@ end
 local debug_delta = 0
 
 function RightCrankMenu.update(dt)
+    
+    -- handle the crank input
     if RightCrankMenu.is_active() then
         local last_crank_angle = RightCrankMenu.crank_angle
         RightCrankMenu.crank_angle = Crank.get_angle()
@@ -288,7 +329,30 @@ function RightCrankMenu.update(dt)
             debug_delta = angle_delta
         end
     end        
+    
+    -- handle the show / hide animation
+    if RightCrankMenu.start_animation then
+        RightCrankMenu.animation_elapsed = 0
+        RightCrankMenu.start_animation = false
+        RightCrankMenu.animating = true
+    elseif RightCrankMenu.animating then
+        RightCrankMenu.animation_elapsed = RightCrankMenu.animation_elapsed + dt
+        if RightCrankMenu.animation_elapsed > RightCrankMenu.animation_time then
+            RightCrankMenu.animating = false
+        end
+    end
 end
+
+function RightCrankMenu.get_animation_ratio()
+    if not RightCrankMenu.animating then
+        return 1
+    else
+        return RightCrankMenu.animation_elapsed / RightCrankMenu.animation_time
+    end
+end
+
+    
+
 
 local debug_icon = 0
 
@@ -332,5 +396,30 @@ function RightCrankMenu.select(args)
     end
 end
 
+function RightCrankMenu.is_hidden()
+    return RightCrankMenu.hidden
+end
+
+function RightCrankMenu.hide(mode)
+    RightCrankMenu.hidden = true
+    if mode ~= 'no_deactivate' then
+        RightCrankMenu.set_active(false)
+    end
+    
+    RightCrankMenu.animation_time = 0.33       -- seconds
+    RightCrankMenu.start_animation = true
+    RightCrankMenu.animation_type = 'hide'
+end
+
+function RightCrankMenu.show(mode)
+    if mode ~= 'no_activate' then
+        RightCrankMenu.set_active(true)
+    end
+    RightCrankMenu.hidden = false
+    
+    RightCrankMenu.animation_time = 0.33       -- seconds
+    RightCrankMenu.start_animation = true
+    RightCrankMenu.animation_type = 'show'
+end
 
 return RightCrankMenu
