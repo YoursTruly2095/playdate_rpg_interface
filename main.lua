@@ -93,6 +93,10 @@ Crank = require("crank")
 -- Using the default font until I find something better
 love.graphics.setNewFont(18)
 
+-- frame rate limiter
+local min_dt
+local next_update_time
+
 
 -- a flag to demonstrate icons being enabled and disabled
 local can_talk = false
@@ -131,28 +135,28 @@ local menu_options =
     },
     {
         {
-            name='inventory',        
+            name='items',        
             fn=function(x) print_message("You rifle through your belongings") end,       
             icon="menu_graphics/items_t.png",
         }
     },
     {
         {
-            name='equipment',        
+            name='gear',        
             fn=function(x) equipment() end,      
             icon="menu_graphics/gear_t.png",
         }
     },
     {
         {
-            name='settings',       
+            name='options',       
             fn=function(x) print_message("You access a meta-physical menu in another world") end,     
             icon="menu_graphics/settings_t.png",
         }
     },
     {
         {
-            name='files',       
+            name='game',       
             fn=function(x) print_message("Monika already got your files") end,   
             icon="menu_graphics/game_t.png",
         }
@@ -228,10 +232,18 @@ function love.load()
     -- load the background image
     background = love.graphics.newImage("menu_graphics/background.png")
     
+    
+    -- frame rate limiter
+    min_dt = 1/30   -- fps
+    next_update_time = love.timer.getTime()     -- next update is immediate
+    
 end
 
 
 function love.update(dt)
+    -- set the time for the next call to update
+    next_update_time = next_update_time + min_dt
+    
     RCM.update(dt)
 end
 
@@ -267,6 +279,13 @@ function love.draw()
   Crank.debug_print()
   RCM.debug_print()
   
+    -- frame rate limiter
+    local current_time = love.timer.getTime()
+    if next_update_time <= current_time then
+        next_update_time = current_time
+    else
+        love.timer.sleep(next_update_time - current_time)  
+    end
 end
 
 
@@ -345,6 +364,10 @@ function love.keypressed(key)
         end
     end
 
+end
+
+function love.wheelmoved(dx,dy)
+    Crank.moved(dy)
 end
 
 

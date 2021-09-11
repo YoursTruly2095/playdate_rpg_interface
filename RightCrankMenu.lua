@@ -352,40 +352,23 @@ function RightCrankMenu.get_animation_ratio()
 end
 
     
-
-
-local debug_icon = 0
-
 function RightCrankMenu.debug_print()
     love.graphics.print({{128,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
     love.graphics.print({{128,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
     love.graphics.print({{128,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
-    love.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},debug_icon },125,100)
+    love.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},RightCrankMenu.current_icon },125,100)
 end
 
 function RightCrankMenu.get_active_icon()
   
-  local icon_selection = RightCrankMenu.angle / RightCrankMenu.icon_shift_angle
-  
-  -- This is going to be trouble with an actual crank, because currently it is relying on lining the
-  -- icons up exactly in order to allow the selection to happen. That's okay with keys or with a 
-  -- clicky USB knob with a set number of clicks per rotation, but it's not going to work with
-  -- the playdate crank. Some effort required here.
-  if icon_selection%1 == 0 then
-    RightCrankMenu.current_icon = icon_selection+1
-  end
-  
-  -- this is one possible approach - but this selects the nearest icon, not 
-  -- the last icon to have occupied the selection box
-  --[[
-  icon_selection = math.floor(icon_selection+0.5)
-  RightCrankMenu.current_icon = icon_selection+1
-  --]]
-  
-  
-  debug_icon = icon_selection
-  
-  return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
+    local icon_selection = RightCrankMenu.angle / RightCrankMenu.icon_shift_angle
+    icon_selection = math.ceil(icon_selection+0.5)
+    
+    -- handle wrapping
+    if icon_selection > #RightCrankMenu.menu_titles then icon_selection = 1 end
+    
+    RightCrankMenu.current_icon = icon_selection
+    return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
 end
 
 function RightCrankMenu.select(args)

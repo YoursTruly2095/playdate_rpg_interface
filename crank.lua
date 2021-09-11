@@ -45,14 +45,7 @@ local Crank = {}
 
 -- My usb knob does 30 clicks per rotation, so 12' per click
 -- No way to track absolute angle between runs so assume 0'
-Crank.knob_angle = 0
--- Set to 0 means no recent clicks
-Crank.click_time = 0
-
-
--- The most recent direction the crank was turned. +=cw, -=ccw
-Crank.direction = 0
-
+Crank.angle = 0
 
 
 
@@ -61,19 +54,22 @@ function Crank.keypressed(key)
     local consumed = false
     
     if key == "kp+" or key == "up" then
-      Crank.knob_angle = (Crank.knob_angle - 12)%360
-      Crank.crank_direction = -1
+      Crank.angle = (Crank.angle - 12)%360
       consumed = true
     elseif key == "kp-" or key == "down" then
-      Crank.knob_angle = (Crank.knob_angle + 12)%360
-      Crank.direction = 1
+      Crank.angle = (Crank.angle + 12)%360
       consumed = true
     end
     
     return consumed
 end
 
-
+function Crank.moved(dy)
+    Crank.angle = (Crank.angle + 6*dy)%360
+end
+    
+    
+    
 --[[
 ┌─┐┌─┐┌┬┐   ┌─┐┬─┐┌─┐┌┐┌┬┌─   ┬  ┬┌─┐┬  ┌─┐┌─┐┬┌┬┐┬ ┬
 │ ┬├┤  │    │  ├┬┘├─┤│││├┴┐   └┐┌┘├┤ │  │ ││  │ │ └┬┘
@@ -106,12 +102,12 @@ end
 --]]
 
 function Crank.debug_print()
-  love.graphics.print({{255,0,0,255},"Angle: ",{255,0,0,255},Crank.knob_angle},125,5)
+  love.graphics.print({{255,0,0,255},"Angle: ",{255,0,0,255},Crank.angle},125,5)
   --love.graphics.print({{255,0,0,255},"°/sec: ",{255,0,0,255},Crank.get_velocity()},125,25)
 end
 
 function Crank.get_angle()
-    return Crank.knob_angle
+    return Crank.angle
 end
 
 
