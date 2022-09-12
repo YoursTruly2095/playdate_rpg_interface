@@ -35,7 +35,7 @@ which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interfa
 
     To use, just 'require' this file in your game code, and call
     RightCrankMenu.load(), RightCrankMenu.draw(), and RightCrankMenu.update()
-    from their respective love / playdate functions.
+    from their respective playdate / playdate functions.
     
     To change the setup of the menu, change things in the 'Configuration' section below
     
@@ -50,8 +50,8 @@ which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interfa
     
 --]]
 
-require("globals")
-local Crank = require("crank")
+import("globals")
+local Crank = import("crank")
 
 local RightCrankMenu = {}
 
@@ -191,9 +191,9 @@ RightCrankMenu.hidden = false
 --[[
 function RightCrankMenu.load()
     for index,value in ipairs(RightCrankMenu.menu_titles) do
-        RightCrankMenu.menu_titles[index]["icon"] = love.graphics.newImage(RightCrankMenu.menu_titles[index][2])
+        RightCrankMenu.menu_titles[index]["icon"] = playdate.graphics.image.new(RightCrankMenu.menu_titles[index][2])
         if RightCrankMenu.menu_titles[index][3] ~= "" then
-            RightCrankMenu.menu_titles[index]["icon_d"] = love.graphics.newImage(RightCrankMenu.menu_titles[index][3])
+            RightCrankMenu.menu_titles[index]["icon_d"] = playdate.graphics.image.new(RightCrankMenu.menu_titles[index][3])
         end
         RightCrankMenu.menu_titles[index]["enabled"] = true 
     end
@@ -213,9 +213,11 @@ end
 
 function RightCrankMenu.draw()
 
+    print("Drawing...")
+    
     if RightCrankMenu.hidden and not RightCrankMenu.animating then return end
 
-    
+    print("really")
 
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
@@ -234,8 +236,7 @@ function RightCrankMenu.draw()
         
         if RightCrankMenu.selector then
             selector = RightCrankMenu.selector
-            w = selector:getWidth()
-            h = selector:getHeight()
+            w,h = selector:getSize()
             x = Scr_W-RightCrankMenu.Ico_W - (w-RightCrankMenu.Ico_W)/2
             y = RightCrankMenu.offset - (h-RightCrankMenu.Ico_H)/2
         else
@@ -250,10 +251,10 @@ function RightCrankMenu.draw()
         end
         
         if RightCrankMenu.selector then
-            love.graphics.draw(selector,x,y)
+            playdate.graphics.image.draw(selector,x,y)
         else
-            love.graphics.rectangle("line",x,y,w,h)
-            love.graphics.rectangle("line",x+1,y+1,w-2,h-2)
+            playdate.graphics.drawRect(x,y,w,h)
+            playdate.graphics.drawRect(x+1,y+1,w-2,h-2)
         end
     end
 end
@@ -289,7 +290,8 @@ function RightCrankMenu.draw_icon(icon, order)
     end
   
   
-  love.graphics.draw(icon,x,y)
+  --playdate.graphics.image.draw(icon,x,y)
+  playdate.graphics.image.draw(icon,x,y)
   
 end
     
@@ -353,10 +355,15 @@ end
 
     
 function RightCrankMenu.debug_print()
-    love.graphics.print({{128,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
-    love.graphics.print({{128,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
-    love.graphics.print({{128,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
-    love.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},RightCrankMenu.current_icon },125,100)
+    --playdate.graphics.print({{128,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
+    --playdate.graphics.print({{128,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
+    --playdate.graphics.print({{128,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
+    --playdate.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},RightCrankMenu.current_icon },125,100)
+    
+    playdate.graphics.drawText("RCM angle: ",RightCrankMenu.angle,125,25)
+    playdate.graphics.drawText("FRA: ",RightCrankMenu.full_rotation_angle,125,50)
+    playdate.graphics.drawText("delta: ",debug_delta,125,75)
+    playdate.graphics.drawText("icon: ",RightCrankMenu.current_icon,125,100)
 end
 
 function RightCrankMenu.get_active_icon()
@@ -368,6 +375,7 @@ function RightCrankMenu.get_active_icon()
     if icon_selection > #RightCrankMenu.menu_titles then icon_selection = 1 end
     
     RightCrankMenu.current_icon = icon_selection
+    
     return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
 end
 

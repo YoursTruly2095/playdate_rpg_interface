@@ -33,7 +33,7 @@ which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interfa
     Crank - a virtual representation of the playdate crank
 
     To use, just 'require' this file in your game code, and call
-    Crank.keypress() from their respective love.keypress(). On an
+    Crank.keypress() from their respective playdate.keypress(). On an
     actual playdate this will need to be rewritten to take input from 
     the actual crank, or hopefully just removed completely.
     
@@ -80,9 +80,9 @@ end
 I removed this for now, because the actual menu isn't using it.
 
 I think if the velocity is required, the correct way to implement would
-be to call a function Crank.update(dt)from love.update(dt), and in that
+be to call a function Crank.update(dt)from playdate.update(dt), and in that
 function, measure the delta of the crank angle, and combine with the 
-delta of time (dt) passed in from love.update().
+delta of time (dt) passed in from playdate.update().
 
 But I suspect it might be tricky to get it right if you want to monitor
 for stuff like short sharp twists on the crank or that sort of thing.
@@ -91,7 +91,7 @@ Probably really need an actual crank to test it out with too!
 function Crank.get_velocity()
   
   local prev_click_time = Crank.click_time
-  Crank.click_time = love.timer.getTime()
+  Crank.click_time = playdate.timer.getTime()
   
   if prev_click_time == 0 then
     return 0 -- Magic Number, don't care.
@@ -102,8 +102,9 @@ end
 --]]
 
 function Crank.debug_print()
-  love.graphics.print({{255,0,0,255},"Angle: ",{255,0,0,255},Crank.angle},125,5)
-  --love.graphics.print({{255,0,0,255},"°/sec: ",{255,0,0,255},Crank.get_velocity()},125,25)
+--  playdate.graphics.print({{255,0,0,255},"Angle: ",{255,0,0,255},Crank.angle},125,5)
+  playdate.graphics.drawText("Angle: ",Crank.angle,125,5)
+  --playdate.graphics.print({{255,0,0,255},"°/sec: ",{255,0,0,255},Crank.get_velocity()},125,25)
 end
 
 function Crank.get_angle()

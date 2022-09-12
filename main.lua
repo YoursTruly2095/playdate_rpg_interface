@@ -50,7 +50,7 @@ where the save button is hidden.
 
 I'm still teaching myself Lua, coming from C/C++ and Python, so a lot of 
 this code feels really ugly to me, and it probably is. If you find better
-ways to implement any of these functions, I'd love to hear about it, but 
+ways to implement any of these functions, I'd playdate to hear about it, but 
 don't waste your time dunking on me because I already know it's bad rn.
 
 If you have any questions, feel free to DM me on Reddit. When I have some-
@@ -82,20 +82,20 @@ wanting to code in lua.
 --]]
 
 
-require("globals")
+import("globals")
 
-RCM = require("RightCrankMenu")
-Crank = require("crank")
+RCM = import("RightCrankMenu")
+--Crank = import("crank")
 
 
 -- Initial value for icon_name
 --icon_name = "Look"
 -- Using the default font until I find something better
-love.graphics.setNewFont(18)
+--playdate.graphics.setNewFont(18)
 
 -- frame rate limiter
-local min_dt
-local next_update_time
+--local min_dt
+--local next_update_time
 
 
 -- a flag to demonstrate icons being enabled and disabled
@@ -186,65 +186,69 @@ local background
 ┴─┘└─┘ └┘ └─┘o┴─┘└─┘┴ ┴─┴┘
 
 Should load any external assets in this function instead of in global
-space. I believe love.load() is run before love.draw(), but if any of
-the functions run before love.draw there are no guarantees.
+space. I believe playdate.load() is run before playdate.draw(), but if any of
+the functions run before playdate.draw there are no guarantees.
 ]]
 
-function love.load()
+function myload()
     
     -- stuff for debugging in zerobrane
     -- comment this stuff out if you don't need it
-    if arg[#arg] == "-debug" then require("mobdebug").start() end
-    io.stdout:setvbuf("no")
+    --if arg[#arg] == "-debug" then require("mobdebug").start() end
+    --io.stdout:setvbuf("no")
     
     
-    print(_VERSION)
+    --print(_VERSION)
 
     -- Final version will be 1-bit color, but red == unfinished
-    love.graphics.setBackgroundColor(1,1,1,255)
+    playdate.graphics.setBackgroundColor(1,1,1,255)
 
     -- Playdate screen should be 400x240. 
     -- Might add magnification factor for pixel doubling on PC
-    love.window.setMode(Scr_W,Scr_H,{resizable=false})
-    love.window.setTitle("Your Game Title Here")
+    --playdate.window.setMode(Scr_W,Scr_H,{resizable=false})
+    --playdate.window.setTitle("Your Game Title Here")
 
     -- load the menu icons
     -- this repaces the file names in the data structure in the code, with the actual loaded icons
     for index,value in ipairs(menu_options) do
-        value[1]['icon']=love.graphics.newImage(value[1]['icon'])
+        value[1]['icon']=playdate.graphics.image.new(value[1]['icon'])
         if value[1]['disabled_icon'] then
-            value[1]['disabled_icon']=love.graphics.newImage(value[1]['disabled_icon'])
+            value[1]['disabled_icon']=playdate.graphics.image.new(value[1]['disabled_icon'])
         end
     end
     
     -- load the icon for the fight option too
-    fight_option['icon']=love.graphics.newImage(fight_option['icon'])
+    fight_option['icon']=playdate.graphics.image.new(fight_option['icon'])
     
     -- load the selctor
-    local selector = love.graphics.newImage("menu_graphics/selector.png")
+    local selector = playdate.graphics.image.new("menu_graphics/selector.png")
     RCM.register_selector(selector)
     
     -- register the icons with the menu
+    print("Registering anything?")
     for _,value in ipairs(menu_options) do
+        print("Registering "..value[1].name)
         RCM.register_icon(value[1])             
     end
     
     -- load the background image
-    background = love.graphics.newImage("menu_graphics/background.png")
+    background = playdate.graphics.image.new("menu_graphics/background.png")
     
     
     -- frame rate limiter
-    min_dt = 1/30   -- fps
-    next_update_time = love.timer.getTime()     -- next update is immediate
+    --min_dt = 1/30   -- fps
+    --next_update_time = playdate.timer.getTime()     -- next update is immediate
     
 end
 
+myload()
 
-function love.update(dt)
+function playdate.update(dt)
     -- set the time for the next call to update
-    next_update_time = next_update_time + min_dt
+    --next_update_time = next_update_time + min_dt
     
     RCM.update(dt)
+    draw()
 end
 
 
@@ -253,39 +257,41 @@ end
 │  │ │└┐┌┘├┤   ││├┬┘├─┤│││
 ┴─┘└─┘ └┘ └─┘o─┴┘┴└─┴ ┴└┴┘
 ]]
-function love.draw()
+function draw()
   
-  love.graphics.draw(background,0,0)
+  --playdate.graphics.draw(background,0,0)
   
   RCM.draw()
   
 
   -- Crank-selected Menu Main Box Outline
-  love.graphics.setColor(0,0,0,255)
-  love.graphics.rectangle("line",2,2,116,192)
-  love.graphics.setColor(1,1,1,255)
+  playdate.graphics.setColor(0,0,0,255)
+  playdate.graphics.drawRect(2,2,116,192)
+  playdate.graphics.setColor(1,1,1,255)
     
     
   -- Any text goes down here
   local icon_data = RCM.get_active_icon()
-  love.graphics.printf({{0,0,0,255},icon_data['name']},0,3,120,"center")
+--  playdate.graphics.printf({{0,0,0,255},icon_data['name']},0,3,120,"center")
+  playdate.graphics.drawText(icon_data['name'],3,120)
   
     -- print a message from the menu
-  love.graphics.print({{128,0,0,255},menu_message},0,200)
+--  playdate.graphics.print({{128,0,0,255},menu_message},0,200)
+  playdate.graphics.drawText(menu_message,0,200)
 
   --[[
     Debuggery here
   ]]
-  Crank.debug_print()
+--  Crank.debug_print()
   RCM.debug_print()
   
     -- frame rate limiter
-    local current_time = love.timer.getTime()
-    if next_update_time <= current_time then
-        next_update_time = current_time
-    else
-        love.timer.sleep(next_update_time - current_time)  
-    end
+    --local current_time = playdate.timer.getTime()
+    --if next_update_time <= current_time then
+--        next_update_time = current_time
+    --else
+        --playdate.timer.sleep(next_update_time - current_time)  
+    --end
 end
 
 
@@ -337,9 +343,9 @@ end
   ABSOLUTE ANGLE (knob_angle) must be updated with every click, however.
   Each click is 12' +/- previous value
 ]]
-function love.keypressed(key)
+function playdate.keypressed(key)
   
-    local consumed = Crank.keypressed(key)
+--    local consumed = Crank.keypressed(key)
 
     if not consumed then
         --handle other keypresses
@@ -366,8 +372,8 @@ function love.keypressed(key)
 
 end
 
-function love.wheelmoved(dx,dy)
-    Crank.moved(dy)
+function playdate.wheelmoved(dx,dy)
+--    Crank.moved(dy)
 end
 
 
