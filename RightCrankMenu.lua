@@ -51,7 +51,6 @@ which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interfa
 --]]
 
 import("globals")
-local Crank = import("crank")
 
 local RightCrankMenu = {}
 
@@ -219,6 +218,8 @@ function RightCrankMenu.draw()
 
     print("really")
 
+    playdate.graphics.clear()
+    
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
         local icon = "icon"
@@ -312,7 +313,7 @@ function RightCrankMenu.update(dt)
     -- handle the crank input
     if RightCrankMenu.is_active() then
         local last_crank_angle = RightCrankMenu.crank_angle
-        RightCrankMenu.crank_angle = Crank.get_angle()
+        RightCrankMenu.crank_angle = playdate.getCrankPosition()
         local angle_delta = (RightCrankMenu.crank_angle - last_crank_angle)
         
         if math.abs(angle_delta) > 180 then
@@ -360,10 +361,10 @@ function RightCrankMenu.debug_print()
     --playdate.graphics.print({{128,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
     --playdate.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},RightCrankMenu.current_icon },125,100)
     
-    playdate.graphics.drawText("RCM angle: ",RightCrankMenu.angle,125,25)
-    playdate.graphics.drawText("FRA: ",RightCrankMenu.full_rotation_angle,125,50)
-    playdate.graphics.drawText("delta: ",debug_delta,125,75)
-    playdate.graphics.drawText("icon: ",RightCrankMenu.current_icon,125,100)
+    playdate.graphics.drawText("RCM angle: "..RightCrankMenu.angle,125,25)
+    playdate.graphics.drawText("FRA: "..RightCrankMenu.full_rotation_angle,125,50)
+    playdate.graphics.drawText("delta: "..debug_delta,125,75)
+    playdate.graphics.drawText("icon: "..RightCrankMenu.current_icon,125,100)
 end
 
 function RightCrankMenu.get_active_icon()
@@ -379,11 +380,11 @@ function RightCrankMenu.get_active_icon()
     return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
 end
 
-function RightCrankMenu.select(args)
-    
+--function RightCrankMenu.select(args)
+function playdate.AButtonUp()    
     local icon = RightCrankMenu.get_active_icon()
     if icon["enabled"] == true and icon["fn"] ~= nil then
-          icon["fn"](args)
+          icon["fn"]('a')
     end
 end
 

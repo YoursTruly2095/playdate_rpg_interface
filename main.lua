@@ -85,7 +85,6 @@ wanting to code in lua.
 import("globals")
 
 RCM = import("RightCrankMenu")
---Crank = import("crank")
 
 
 -- Initial value for icon_name
