@@ -4,6 +4,8 @@ A basic crank-centric menu template for Playdate console RPGs.
 
 Based on ConfidentFloor6601/playdate_rpg_interface
 
+UPDATE! Now runs on an actual Playdate (and Playdate Simulator).
+
 NOTE! If you just run the code you'll see the menu behaves a bit strangely.
 This is because it is set up to test all the options below! In particular,
 the twitchiness of the look icon will be resolved when you cast magic 
@@ -71,7 +73,7 @@ You must also call
 from their respective love2d functions
   
 
-This version includes placeholder graphics so it runs OTB in Love2d. 
+This version includes placeholder graphics so it runs OTB in the Playdate Simulator (or an actual Playdate).
 You can use the graphics in your game if you want to. But you won't want to :-)
 
 
