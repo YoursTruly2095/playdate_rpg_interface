@@ -50,8 +50,6 @@ which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interfa
     
 --]]
 
-import("globals")
-
 local RightCrankMenu = {}
 
 -------------------------------------------------------------------------------------
@@ -74,7 +72,7 @@ RightCrankMenu.Ico_H = 40
 -- Can be set as a fraction of the screen size, or an absolute value.
 -- You could even adjust it in real time to make the icons harder to 
 -- select in game, if you wanted :-)
---RightCrankMenu.offset = (Scr_H - RightCrankMenu.Ico_H) / 2
+--RightCrankMenu.offset = (playdate.display.getHeight() - RightCrankMenu.Ico_H) / 2
 RightCrankMenu.offset = 100
 
 -- The angle through which to move the crank to select the next icon
@@ -200,7 +198,7 @@ end
 --]]
 
 local function calculate_animation_x(x)
-    local offscreen_x = Scr_W
+    local offscreen_x = playdate.display.getWidth()
     local ratio = RightCrankMenu.get_animation_ratio()
     if RightCrankMenu.animation_type == 'hide' then
         x = x + (offscreen_x - x) * (ratio)
@@ -234,11 +232,12 @@ function RightCrankMenu.draw()
         
         local w, h, x, y
         local selector
+        local Src_W = playdate.display.getWidth()
         
         if RightCrankMenu.selector then
             selector = RightCrankMenu.selector
             w,h = selector:getSize()
-            x = Scr_W-RightCrankMenu.Ico_W - (w-RightCrankMenu.Ico_W)/2
+            x = Src_W-RightCrankMenu.Ico_W - (w-RightCrankMenu.Ico_W)/2
             y = RightCrankMenu.offset - (h-RightCrankMenu.Ico_H)/2
         else
             w = RightCrankMenu.Ico_W
@@ -263,7 +262,8 @@ end
 function RightCrankMenu.draw_icon(icon, order)
   
   local angle = RightCrankMenu.angle
-  
+  local Scr_W, Scr_H = playdate.display.getSize()
+
   angle = -angle -- invert controls
 
   local function get_y_from_angle(angle, order)
@@ -344,6 +344,9 @@ function RightCrankMenu.update(dt)
             RightCrankMenu.animating = false
         end
     end
+    
+    RightCrankMenu.draw()
+    
 end
 
 function RightCrankMenu.get_animation_ratio()

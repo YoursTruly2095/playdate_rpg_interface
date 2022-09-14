@@ -1,108 +1,50 @@
---[[
-
-ORIGINAL FILE NOTICE
-
-╦  ┌─┐┌─┐┌─┐┬    ╔╗ ┬┌┬┐┌─┐ 
-║  ├┤ │ ┬├─┤│    ╠╩╗│ │ └─┐ 0
-╩═╝└─┘└─┘┴ ┴┴─┘  ╚═╝┴ ┴ └─┘ 0
-
-None of this code is optimized or guaranteed to work, but you're welcome
-to use any of it in your own programs. The only thing I ask is if you use
-or modify the "Right Crank Menu" context-sensitive scrolling icon selector,
-that you credit u/ConfidentFloor6601 for the original implementation in 
-your source code.
-
-You're on your own for icons and stuff -- pixel art is actual effort at 
-these scales, so I'm going to hang onto any copyrights for artwork I've
-shared on Reddit and elsewhere. (The icons aren't that great anyway.)
-
-╔═╗┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐  ╔═╗┌┬┐┌─┐┬─┐┌┬┐┌─┐┌┬┐
-║ ╦├┤  │  │ │││││ ┬  ╚═╗ │ ├─┤├┬┘ │ ├┤  ││ 0
-╚═╝└─┘ ┴  ┴ ┴┘└┘└─┘  ╚═╝ ┴ ┴ ┴┴└─ ┴ └─┘─┴┘ 0
-
-This code is written in Lua. If you don't know Lua, fighting with my
-terrible code may be a good learning experience, but even if not, you
-will need to install a compiler or an IDE for compiling all of this
-into something resembling a functional program. I'm using ZeroBrane 
-Studio on Windows 10; it seems to work fine, but I can't assume any
-responsibility if it's actually riddled with malware or otherwise
-nukes your system. With that glowing endorsement in place, you can
-find it here: https://studio.zerobrane.com
-
-
-This code requires LÖVE; there are instructions for downloading and
-installing LÖVE at love2d.org. I'll let you figure that part out for
-your own system, if you don't already have it running.
-
-Icons that fit the current RCM are 36x36, with a two-pixel border for each
-drawn by the RCM. The RCM occupies 40x240 pixels. The Left Context Menu (LCM)
-occupies 100x240, leaving 240x240 in the middle for actual game content.
-All of that can be changed in the code, so don't feel stuck with it.
-
-For my pixel art, I've been using the offline version of Piskel on my
-PC (https://www.piskelapp.com), and Pixel Studio on my android phone
-(https://play.google.com/store/apps/details?id=com.PixelStudio)
-Once again, I take absolutely no responsibility for either app, but
-from my experience, Piskel is more intuitive, so I've done all of my
-icons there, but Pixel Studio looks more powerful, is cross-platform,
-and has more tools -- It just annoys me because I can never remember
-where the save button is hidden.
-
-I'm still teaching myself Lua, coming from C/C++ and Python, so a lot of 
-this code feels really ugly to me, and it probably is. If you find better
-ways to implement any of these functions, I'd playdate to hear about it, but 
-don't waste your time dunking on me because I already know it's bad rn.
-
-If you have any questions, feel free to DM me on Reddit. When I have some-
-thing that more closely resembles a game, I'll probably start a Twitter or
-something for it, but I'll announce that in r/playdate anyway.
-
-Cheers and Happy Coding,
-the Door Demon
-]]
-
-
--- Banners from: https://manytools.org/hacker-tools/ascii-banner/
--- Font: Calvin S
--- Reason: I have a hard time finding functions in Lua, lol
-
-
 
 --[[
 
-NEW FILE NOTICE
+This is based on 'playdate_rpg_interface' by u/ConfidentFloor6601, 
+which can be found at https://github.com/ConfidentFloor6601/playdate_rpg_interface
 
-This file is very much cut down from the original, and is included 
-only to provide an example of how to use RightCrankMenu.lua and crank.lua,
-and to make a program that runs for testing the menu.
+ * ------------------------------------------------------------------------------
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ *
+ * 3. This notice may not be removed or altered from any source distribution.
+ * -----------------------------------------------------------------------------
+ * (This is the zlib License)
 
-Just as a note, I would also recommend ZeroBrane Studio to anyone
-wanting to code in lua. 
+Please credit u/ConfidentFloor6601 and YoursTruly2095 for this work.
+
+--]]
+
+--[[
+
+This file is included to provide an example of how to use the features of
+RightCrankMenu.lua.
 
 --]]
 
 
-import("globals")
 
 RCM = import("RightCrankMenu")
-
-
--- Initial value for icon_name
---icon_name = "Look"
--- Using the default font until I find something better
---playdate.graphics.setNewFont(18)
-
--- frame rate limiter
---local min_dt
---local next_update_time
-
 
 -- a flag to demonstrate icons being enabled and disabled
 local can_talk = false
 local menu_message = ""
 
 --[[ 
-
     Menu Definition
 --]]
 
@@ -113,7 +55,8 @@ local menu_options =
             name='look',
             fn=function(x) look() end,   
             icon="menu_graphics/look_t.png",
-            shift_ratio = 0.2,
+            shift_ratio = 0.2,                  -- this will make the menu seem to skip past this option very quickly - use this to mess with your players!
+                                                -- you can also set the shift ration to greater than 1 to make an option 'sticky', and alter the shift ratio at runtime
         },
     },
     {
@@ -162,6 +105,7 @@ local menu_options =
     },
 }
     
+-- this option won't be in the menu at startup, but gets added dynamically later
 local fight_option = 
 {
     name='fight',   
@@ -171,44 +115,14 @@ local fight_option =
 
 local background
 
---[[
-╔═╗╦ ╦╔╗╔╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
-╠╣ ║ ║║║║║   ║ ║║ ║║║║╚═╗
-╚  ╚═╝╝╚╝╚═╝ ╩ ╩╚═╝╝╚╝╚═╝
-]]
 
-
-
---[[
-┬  ┌─┐┬  ┬┌─┐ ┬  ┌─┐┌─┐┌┬┐
-│  │ │└┐┌┘├┤  │  │ │├─┤ ││
-┴─┘└─┘ └┘ └─┘o┴─┘└─┘┴ ┴─┴┘
-
-Should load any external assets in this function instead of in global
-space. I believe playdate.load() is run before playdate.draw(), but if any of
-the functions run before playdate.draw there are no guarantees.
-]]
 
 function myload()
     
-    -- stuff for debugging in zerobrane
-    -- comment this stuff out if you don't need it
-    --if arg[#arg] == "-debug" then require("mobdebug").start() end
-    --io.stdout:setvbuf("no")
-    
-    
-    --print(_VERSION)
-
-    -- Final version will be 1-bit color, but red == unfinished
     playdate.graphics.setBackgroundColor(1,1,1,255)
 
-    -- Playdate screen should be 400x240. 
-    -- Might add magnification factor for pixel doubling on PC
-    --playdate.window.setMode(Scr_W,Scr_H,{resizable=false})
-    --playdate.window.setTitle("Your Game Title Here")
-
     -- load the menu icons
-    -- this repaces the file names in the data structure in the code, with the actual loaded icons
+    -- this replaces the file names in the data structure in the code, with the actual loaded icons
     for index,value in ipairs(menu_options) do
         value[1]['icon']=playdate.graphics.image.new(value[1]['icon'])
         if value[1]['disabled_icon'] then
@@ -219,7 +133,7 @@ function myload()
     -- load the icon for the fight option too
     fight_option['icon']=playdate.graphics.image.new(fight_option['icon'])
     
-    -- load the selctor
+    -- load the selector
     local selector = playdate.graphics.image.new("menu_graphics/selector.png")
     RCM.register_selector(selector)
     
@@ -232,11 +146,6 @@ function myload()
     
     -- load the background image
     background = playdate.graphics.image.new("menu_graphics/background.png")
-    
-    
-    -- frame rate limiter
-    --min_dt = 1/30   -- fps
-    --next_update_time = playdate.timer.getTime()     -- next update is immediate
     
 end
 
@@ -260,7 +169,6 @@ function draw()
   
   --playdate.graphics.draw(background,0,0)
   
-  RCM.draw()
   
 
   -- Crank-selected Menu Main Box Outline
