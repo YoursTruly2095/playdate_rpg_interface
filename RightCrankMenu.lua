@@ -288,10 +288,8 @@ end
     
 
 function RightCrankMenu.set_active(active)
+    RightCrankMenu.crank_angle = playdate.getCrankPosition()
     RightCrankMenu.active = active
-    
-    -- need to do something about this to stop the menu jumping when it is next enabled
-    --RightCrankMenu.crank_angle = Crank.get_angle()    -- get the baseline angle for the next update
 end
 
 function RightCrankMenu.is_active(active)
@@ -352,11 +350,6 @@ end
 
     
 function RightCrankMenu.debug_print()
-    --playdate.graphics.print({{128,0,0,255},"RCM angle: ",{255,0,0,255},RightCrankMenu.angle},125,25)
-    --playdate.graphics.print({{128,0,0,255},"FRA: ",{255,0,0,255},RightCrankMenu.full_rotation_angle},125,50)
-    --playdate.graphics.print({{128,0,0,255},"delta: ",{255,0,0,255},debug_delta },125,75)
-    --playdate.graphics.print({{128,0,0,255},"icon: ",{255,0,0,255},RightCrankMenu.current_icon },125,100)
-    
     playdate.graphics.drawText("RCM angle: "..RightCrankMenu.angle,125,25)
     playdate.graphics.drawText("FRA: "..RightCrankMenu.full_rotation_angle,125,50)
     playdate.graphics.drawText("delta: "..debug_delta,125,75)
