@@ -210,14 +210,8 @@ end
 
 function RightCrankMenu.draw()
 
-    print("Drawing...")
-    
     if RightCrankMenu.hidden and not RightCrankMenu.animating then return end
 
-    print("really")
-
-    playdate.graphics.clear()
-    
     -- Right Crank Menu Box Outlines and Icons
     for index,value in ipairs(RightCrankMenu.menu_titles) do
         local icon = "icon"
@@ -299,7 +293,9 @@ end
 
 function RightCrankMenu.set_active(active)
     RightCrankMenu.active = active
-    RightCrankMenu.crank_angle = Crank.get_angle()    -- get the baseline angle for the next update
+    
+    -- need to do something about this to stop the menu jumping when it is next enabled
+    --RightCrankMenu.crank_angle = Crank.get_angle()    -- get the baseline angle for the next update
 end
 
 function RightCrankMenu.is_active(active)
@@ -383,11 +379,10 @@ function RightCrankMenu.get_active_icon()
     return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
 end
 
---function RightCrankMenu.select(args)
-function playdate.AButtonUp()    
+function RightCrankMenu.select(args)
     local icon = RightCrankMenu.get_active_icon()
     if icon["enabled"] == true and icon["fn"] ~= nil then
-          icon["fn"]('a')
+          icon["fn"](args)
     end
 end
 

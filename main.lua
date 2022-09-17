@@ -40,68 +40,93 @@ RightCrankMenu.lua.
 
 RCM = import("RightCrankMenu")
 
--- a flag to demonstrate icons being enabled and disabled
-local can_talk = false
+-- a string to display a message when a menu item is selected
 local menu_message = ""
+
+-- an image which represents the rest of your game
+local rest_of_game
+
 
 --[[ 
     Menu Definition
+    
+    This is an array of menu items definitions that will appear in the menu
+    
+    These get registered with the menu one at a time, you don;t need to 
+    structure them in an array like this if a different structure is more
+    convenient.
+    
+    Each entry has:
+    
+    name: a string which is used to refer to the entry. Multiple entries
+          can have the same name, and will all then have the same properties.
+          
+    fn: a callback function which is called when the play selects the menu
+        entry. 
+        
+    icon: the playdate.graphics.image object to display in the menu for this 
+          entry. In the table below, this is set to the filename for the
+          image, which is then replaced with the actual image in myload()
+          (see below).
+          
+    disabled_icon: (optional) an additional icon for display if the menu
+                   option is disabled. You only need this if you plan on
+                   actually disabling the menu option.
+                   
+    enabled: (optional) the initial enabled state of the icon. Defaults to
+             true.
+    
+    shift_ratio: (optional) This controls how fast the crank moves an icon
+                 past the selector. Shift ratios less than 1 will make the 
+                 icon move past quickly, and therefore be harder to select.
+                 Shift ratios greater than 1 make the icon move past slower
+                 and be easier to select. The intention for this option is
+                 to bring some gameplay into the menu itself; for example,
+                 if the character in a game was drunk, maybe the 'climb
+                 ladder' option would be difficult to select? Could also be
+                 good in 'game plays player' type games (e.g. Doki Doki
+                 Literature Club or Undertale)
 --]]
 
 local menu_options = 
 {
     {
-        {
-            name='look',
-            fn=function(x) look() end,   
-            icon="menu_graphics/look_t.png",
-            shift_ratio = 0.2,                  -- this will make the menu seem to skip past this option very quickly - use this to mess with your players!
-                                                -- you can also set the shift ration to greater than 1 to make an option 'sticky', and alter the shift ratio at runtime
-        },
+        name='look',
+        fn=function(x) look() end,   
+        icon="menu_graphics/look_t.png",
+        shift_ratio = 0.2,                  
     },
     {
-        {
-            name='talk',    
-            fn=function(x) talk() end,  
-            icon="menu_graphics/talk_t.png",
-            disabled_icon="menu_graphics/talk_d.png",
-            enabled = false,
-        },
+        name='talk',    
+        fn=function(x) talk() end,  
+        icon="menu_graphics/talk_t.png",
+        disabled_icon="menu_graphics/talk_d.png",
+        enabled = false,
     },
     {
-        {
-            name='magic',       
-            fn=function(x) magic() end,      
-            icon="menu_graphics/magic_t.png",
-        },
+        name='magic',       
+        fn=function(x) magic() end,      
+        icon="menu_graphics/magic_t.png",
     },
     {
-        {
-            name='items',        
-            fn=function(x) print_message("You rifle through your belongings") end,       
-            icon="menu_graphics/items_t.png",
-        }
+        name='items',        
+        fn=function(x) print_message("You rifle through your belongings") end,       
+        icon="menu_graphics/items_t.png",
     },
     {
-        {
-            name='gear',        
-            fn=function(x) equipment() end,      
-            icon="menu_graphics/gear_t.png",
-        }
+        name='gear',        
+        fn=function(x) equipment() end,      
+        icon="menu_graphics/gear_t.png",
     },
     {
-        {
-            name='options',       
-            fn=function(x) print_message("You access a meta-physical menu in another world") end,     
-            icon="menu_graphics/settings_t.png",
-        }
+        name='options',       
+        fn=function(x) print_message("You access a meta-physical menu in another world") end,     
+        icon="menu_graphics/settings_t.png",
     },
     {
-        {
-            name='game',       
-            fn=function(x) print_message("Monika already got your files") end,   
-            icon="menu_graphics/game_t.png",
-        }
+        name='game',       
+        fn=function(x) print_message("Monika already got your files") end,   
+        icon="menu_graphics/game_t.png",
     },
 }
     
@@ -113,111 +138,32 @@ local fight_option =
     icon="menu_graphics/fight_t.png",
 }
 
-local background
-
-
-
-function myload()
-    
-    playdate.graphics.setBackgroundColor(1,1,1,255)
-
-    -- load the menu icons
-    -- this replaces the file names in the data structure in the code, with the actual loaded icons
-    for index,value in ipairs(menu_options) do
-        value[1]['icon']=playdate.graphics.image.new(value[1]['icon'])
-        if value[1]['disabled_icon'] then
-            value[1]['disabled_icon']=playdate.graphics.image.new(value[1]['disabled_icon'])
-        end
-    end
-    
-    -- load the icon for the fight option too
-    fight_option['icon']=playdate.graphics.image.new(fight_option['icon'])
-    
-    -- load the selector
-    local selector = playdate.graphics.image.new("menu_graphics/selector.png")
-    RCM.register_selector(selector)
-    
-    -- register the icons with the menu
-    print("Registering anything?")
-    for _,value in ipairs(menu_options) do
-        print("Registering "..value[1].name)
-        RCM.register_icon(value[1])             
-    end
-    
-    -- load the background image
-    background = playdate.graphics.image.new("menu_graphics/background.png")
-    
-end
-
-myload()
-
-function playdate.update(dt)
-    -- set the time for the next call to update
-    --next_update_time = next_update_time + min_dt
-    
-    RCM.update(dt)
-    draw()
-end
-
 
 --[[
-┬  ┌─┐┬  ┬┌─┐ ┌┬┐┬─┐┌─┐┬ ┬
-│  │ │└┐┌┘├┤   ││├┬┘├─┤│││
-┴─┘└─┘ └┘ └─┘o─┴┘┴└─┴ ┴└┴┘
-]]
-function draw()
-  
-  --playdate.graphics.draw(background,0,0)
-  
-  
 
-  -- Crank-selected Menu Main Box Outline
-  playdate.graphics.setColor(0,0,0,255)
-  playdate.graphics.drawRect(2,2,116,192)
-  playdate.graphics.setColor(1,1,1,255)
-    
-    
-  -- Any text goes down here
-  local icon_data = RCM.get_active_icon()
---  playdate.graphics.printf({{0,0,0,255},icon_data['name']},0,3,120,"center")
-  playdate.graphics.drawText(icon_data['name'],3,120)
-  
-    -- print a message from the menu
---  playdate.graphics.print({{128,0,0,255},menu_message},0,200)
-  playdate.graphics.drawText(menu_message,0,200)
+Callback functions for various menu options
 
-  --[[
-    Debuggery here
-  ]]
---  Crank.debug_print()
-  RCM.debug_print()
-  
-    -- frame rate limiter
-    --local current_time = playdate.timer.getTime()
-    --if next_update_time <= current_time then
---        next_update_time = current_time
-    --else
-        --playdate.timer.sleep(next_update_time - current_time)  
-    --end
-end
+Each one sets a message to be printed, and also tinkers with the
+menu, just to show how it can be altered during your game.
 
+look() and talk() show how an option which is already in the
+menu can be enabled and disabled.
 
+magic() shows how a new menu option can be added to the menu,
+including how to control where in the menu it appears. magic()
+also shows how to tinker with the shift ratio of an item in 
+menu at runtime.
 
-function print_message(message)
-  
-  menu_message=message
+equipment() shows how to remove an item from the menu.
 
-end
-
+--]]
 function look()
     print_message("You looked, so now you can talk") 
-    can_talk = true    
     RCM.enable_icon("talk")
 end
 
 function talk()
     print_message("You talk, so now you must look") 
-    can_talk = false    
     RCM.disable_icon("talk")
 end
 
@@ -239,48 +185,136 @@ function equipment()
     RCM.remove_icon('fight')
 end
 
---[[
-┬  ┌─┐┬  ┬┌─┐ ┬┌─┌─┐┬ ┬┌─┐┬─┐┌─┐┌─┐┌─┐┌─┐┌┬┐
-│  │ │└┐┌┘├┤  ├┴┐├┤ └┬┘├─┘├┬┘├┤ └─┐└─┐├┤  ││
-┴─┘└─┘ └┘ └─┘o┴ ┴└─┘ ┴ ┴  ┴└─└─┘└─┘└─┘└─┘─┴┘
-  Buttons will function differently depending on which menu or screen is
-  currently in focus, so our keyparser needs to be aware of which state 
-  it is in.
-  
-  ABSOLUTE ANGLE (knob_angle) must be updated with every click, however.
-  Each click is 12' +/- previous value
-]]
-function playdate.keypressed(key)
-  
---    local consumed = Crank.keypressed(key)
 
-    if not consumed then
-        --handle other keypresses
-        if RCM.is_active() then
-            if key == "a" or key == "left" then
-                RCM.set_active(false)
-            end
-            if key == "space" then
-                RCM.select(nil)
-            end
-        else
-            if key == "d" or key == "right" then
-                RCM.set_active(true)
-            end
-        end  
-        if key == "s" then
-            if RCM.is_hidden() then
-                RCM.show()
-            else
-                RCM.hide()
-            end
+-- a function that loads the graphics for the menu
+function load_game()
+    
+    -- load the menu icons
+    -- this replaces the file names in the data structure in the code, with the actual loaded icons
+    for index,value in ipairs(menu_options) do
+        value['icon']=playdate.graphics.image.new(value['icon'])
+        if value['disabled_icon'] then
+            value['disabled_icon']=playdate.graphics.image.new(value['disabled_icon'])
         end
     end
+    
+    -- load the icon for the fight option too
+    fight_option['icon']=playdate.graphics.image.new(fight_option['icon'])
+    
+    -- load the selector
+    local selector = playdate.graphics.image.new("menu_graphics/selector.png")
+    RCM.register_selector(selector)
+    
+    -- register the icons with the menu
+    print("Registering anything?")
+    for _,value in ipairs(menu_options) do
+        print("Registering "..value.name)
+        RCM.register_icon(value)             
+    end
+    
+    -- load the rest of your game
+    rest_of_game = playdate.graphics.image.new("menu_graphics/background.png")
+    
+end
+
+-- actuall call the load function
+load_game()
+
+--[[
+
+playdate.update() 
+
+This is the callback which the playdate will call every frame (default 30 times 
+a second). Unlike Love2d, there is no separate 'draw()' callback, so you need
+to do the drawing in your update function also. RightCrankMenu requires that
+playdate.graphics.clear() is called each frame (I guess any animation using
+images does).
+
+TODO: try out Playdate sprites, and see if the menu can work without clearing
+      each frame if sprites are used.
+      
+If you are structuring your code with separate update() and draw() functions
+(as per Love2d), then you can separate out the RightCrankMenu update and draw
+just by commenting out one line in RightCrankMenu.lua. Right at the bottom of
+RightCrankMenu.update() is a call to RightCrankMenu.draw(), remove that if 
+you would prefer to call them separately.
+--]]
+function playdate.update()
+    
+    -- playdate update is locked to framerate
+    local dt = 1/30
+    
+    playdate.graphics.clear()
+    update_rest_of_game(dt)
+    RCM.update(dt)
+    
+end
+
+
+-- do all your game stuff outside of the RightCrankMenu
+-- in this example, we just draw a background and some
+-- text
+function update_rest_of_game(dt)
+  
+  -- draw an image which represents the rest of the game
+  -- this is currently just a gray background 
+  playdate.graphics.image.draw(rest_of_game,0,0)
+  
+  -- print the icon name currently under the selector
+  local icon_data = RCM.get_active_icon()
+  playdate.graphics.drawText(icon_data['name'],5,185)
+  
+    -- print the message from the menu
+  playdate.graphics.drawText(menu_message,5,205)
+  
+end
+
+-- Set the menu text that which will be printed each frame.
+-- We can't just print here, because we need to print every
+-- frame, because we are clearing and redrawing the screen
+-- every frame.
+function print_message(message)
+  
+  menu_message=message
 
 end
 
-function playdate.wheelmoved(dx,dy)
---    Crank.moved(dy)
+
+--[[
+
+Handle Playdate UI
+
+In this example, the menu item is selected on release of the A
+button. You might want it on press, or on hold, or on a different
+button, or even just on the crank stopping rotating, or whatever.
+
+--]]
+
+function playdate.AButtonUp()    
+    if RCM.is_active() then
+        RCM.select()
+    end
 end
+
+function playdate.leftButtonDown()
+    if RCM.is_hidden() then
+        RCM.show()
+    end
+end
+
+function playdate.rightButtonDown()
+    if not RCM.is_hidden() then
+        RCM.hide()
+    end
+end
+
+function playdate.BButtonUp()    
+    if RCM.is_active() then
+        RCM.set_active(false)
+    else
+        RCM.set_active(true)
+    end  
+end
+
 
 
