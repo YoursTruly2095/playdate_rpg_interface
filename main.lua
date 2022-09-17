@@ -267,6 +267,10 @@ function update_rest_of_game(dt)
     -- print the message from the menu
   playdate.graphics.drawText(menu_message,5,205)
   
+  
+  -- 
+  playdate.graphics.drawText("IsActive:"..tostring(RCM.is_active()),5,125)
+  
 end
 
 -- Set the menu text that which will be printed each frame.
@@ -298,13 +302,13 @@ end
 
 function playdate.leftButtonDown()
     if RCM.is_hidden() then
-        RCM.show()
+        RCM.show('no_activate')
     end
 end
 
 function playdate.rightButtonDown()
     if not RCM.is_hidden() then
-        RCM.hide()
+        RCM.hide('no_deactivate')
     end
 end
 

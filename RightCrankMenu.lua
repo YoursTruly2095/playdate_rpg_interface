@@ -220,9 +220,7 @@ function RightCrankMenu.draw()
     end
 
     -- "active icon" selector box here
-    
-    
-    if RightCrankMenu.active or RightCrankMenu.animating then
+    if RightCrankMenu.active or RightCrankMenu.animating_selector then
         
         local w, h, x, y
         local selector
@@ -240,7 +238,7 @@ function RightCrankMenu.draw()
             y = RightCrankMenu.offset
         end
         
-        if RightCrankMenu.animating then
+        if RightCrankMenu.animating_selector then
             x = calculate_animation_x(x)
         end
         
@@ -284,8 +282,6 @@ function RightCrankMenu.draw_icon(icon, order)
         x = calculate_animation_x(x)
     end
   
-  
-  --playdate.graphics.image.draw(icon,x,y)
   playdate.graphics.image.draw(icon,x,y)
   
 end
@@ -338,6 +334,7 @@ function RightCrankMenu.update(dt)
         RightCrankMenu.animation_elapsed = RightCrankMenu.animation_elapsed + dt
         if RightCrankMenu.animation_elapsed > RightCrankMenu.animation_time then
             RightCrankMenu.animating = false
+            RightCrankMenu.animating_selector = false
         end
     end
     
@@ -392,6 +389,9 @@ end
 
 function RightCrankMenu.hide(mode)
     RightCrankMenu.hidden = true
+    
+    RightCrankMenu.animating_selector = RightCrankMenu.is_active()
+    
     if mode ~= 'no_deactivate' then
         RightCrankMenu.set_active(false)
     end
@@ -402,9 +402,13 @@ function RightCrankMenu.hide(mode)
 end
 
 function RightCrankMenu.show(mode)
+    
     if mode ~= 'no_activate' then
         RightCrankMenu.set_active(true)
     end
+    
+    RightCrankMenu.animating_selector = RightCrankMenu.is_active()
+
     RightCrankMenu.hidden = false
     
     RightCrankMenu.animation_time = 0.33       -- seconds
