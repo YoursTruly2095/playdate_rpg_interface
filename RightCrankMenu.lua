@@ -87,7 +87,143 @@ RightCrankMenu.angle = 0
 -------------------------------------------------------------------------------------
 ------- API FUNCTIONS ---------------------------------------------------------------
 -------------------------------------------------------------------------------------
-function RightCrankMenu.register_icon(icon)
+--[[
+
+Add an entry to the menu the menu.
+
+    RightCrankMenu.add_icon(icon)
+
+    'icon' is a table similar to this:
+        
+        icon = 
+        {
+            name='name_of_option',    
+            fn=function(x) thing_to_do_when_selected() end,  
+            icon=<a preloaded playdate.graphics.image>,
+            disabled_icon=<another preloaded playdate.graphics.image>,      -- optional
+            enabled = false,                                                -- optional, default true  
+            shift_ratio = 0.2,                                              -- optional, default 1              
+        },
+
+    where:
+
+        name: a string which is used to refer to the entry. Multiple entries
+              can have the same name, and will all then have the same properties.
+              
+        fn: a callback function which is called when the play selects the menu
+            entry. 
+            
+        icon: the playdate.graphics.image object to display in the menu for this 
+              entry. You will lead to load ths before adding the icon.
+              
+        disabled_icon: (optional) an additional icon for display if the menu
+                       option is disabled. You only need this if you plan on
+                       actually disabling the menu option.
+                       
+        enabled: (optional) the initial enabled state of the icon. Defaults to
+                 true.
+        
+        shift_ratio: (optional) This controls how fast the crank moves an icon
+                     past the selector. Shift ratios less than 1 will make the 
+                     icon move past quickly, and therefore be harder to select.
+                     Shift ratios greater than 1 make the icon move past slower
+                     and be easier to select. The intention for this option is
+                     to bring some gameplay into the menu itself; for example,
+                     if the character in a game was drunk, maybe the 'climb
+                     ladder' option would be difficult to select? Could also be
+                     good in 'game plays player' type games (e.g. Doki Doki
+                     Literature Club or Undertale)
+
+
+Remove an item from the menu
+
+    RightCrankMenu.remove_icon(name)
+    
+    'name' is the name of the item to remove, as specified when the item was added
+
+
+Enable / disable menu items
+    
+    RightCrankMenu.enable_icon(name)
+    RightCrankMenu.disable_icon(name)
+
+    'name' is the name of the item to remove, as specified when the item was added
+
+
+Change the shift ratio of a menu item to make it harder or easier to select
+
+    RightCrankMenu.set_shift_ratio(name, ratio)
+    
+    'name' is the name of the item to remove, as specified when the item was added
+    
+    'ratio' is the new shift ratio, below 1 is harder to select, above 1 is easier
+    
+    
+Register the image for the menu selector    
+
+    RightCrankMenu.register_selector(selector)
+    
+    'selector' is the playdate.graphics.image object to use for selection
+    
+    
+Make the menu active or inactive. When the menu is inactive the selector will be
+hidden. This is useful if you want to use the crank for other things in your game 
+as well as the menu.
+
+    RightCrankMenu.set_active(active)
+    
+    'active' is true or false
+    
+    
+Query the menu to see if it is active at the moment
+
+    RightCrankMenu.is_active(active)
+    
+    returns true or false
+    
+    
+Query the menu to see which icon is under the selector. Could be used for menu
+effects without the player ever actually selecting an item.
+
+    RightCrankMenu.get_active_icon()
+    
+    returns the name of the icon under the selector
+
+
+Trigger a menu selection. Call this from your game to trigger a call to the 
+function for the menu option under the selector. This is left up to you to
+call from your game so you can choose what input to use, button A, button B,
+arrow key, crank left motionless for 200ms, whatever.
+
+    RightCrankMenu.select(args)
+    
+    'args' is whatever you want, and will get passed to the menu option 
+           callback function. It is fine to leave this blank if you don't
+           need it.
+    
+
+The menu can be hidden, and will slide off and on the screen when hidden and
+shown. The following functions control this behaviour.
+
+    RightCrankMenu.is_hidden()
+    
+    returns true or false
+    
+   
+    RightCrankMenu.hide(mode)
+    
+    'mode' can be 'no_deactivate' or just leave blank. By default the menu be
+           deactivated when it is hidden, but by specifying 'no_deactivate' 
+           you can leave the menu active while it is hidden.
+           
+           
+    RightCrankMenu.show(mode)
+    
+    'mode' can be 'no_activate' or just leave blank. By default the menu is
+           activated when it is shown, but by specifying 'no_activate' you can 
+           leave the menu deactivated after it is shown.
+--]]
+function RightCrankMenu.add_icon(icon)
     
     -- set up defaults for options
     local after = nil     -- default to end of table
@@ -352,7 +488,7 @@ function RightCrankMenu.draw()
         end
         
         if RightCrankMenu.animating_selector then
-            x = calculate_animation_x(x)
+            x = RightCrankMenu.calculate_animation_x(x)
         end
         
         if RightCrankMenu.selector then
@@ -368,7 +504,7 @@ end
 ------- INTERNALS -------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 
-local function calculate_animation_x(x)
+function RightCrankMenu.calculate_animation_x(x)
     local offscreen_x = playdate.display.getWidth()
     local ratio = RightCrankMenu.get_animation_ratio()
     if RightCrankMenu.animation_type == 'hide' then
@@ -408,7 +544,7 @@ function RightCrankMenu.draw_icon(icon, order)
   local x = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y)^2)/1000
   
     if RightCrankMenu.animating then
-        x = calculate_animation_x(x)
+        x = RightCrankMenu.calculate_animation_x(x)
     end
   
   playdate.graphics.image.draw(icon,x,y)

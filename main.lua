@@ -172,7 +172,7 @@ function magic()
     -- insert the fight option into the menu after 'talk'
     fight_option['after'] = 'talk'
     fight_option['shift_ratio'] = 2
-    RCM.register_icon(fight_option)   -- insert 'fight' after talk, and require 120 degrees crank to move past it
+    RCM.add_icon(fight_option)   -- insert 'fight' after talk, and require 120 degrees crank to move past it
 
     -- set ratio for 'look' back to 1 
     RCM.set_shift_ratio('look', 1)
@@ -206,10 +206,10 @@ function load_game()
     RCM.register_selector(selector)
     
     -- register the icons with the menu
-    print("Registering anything?")
+    print("Adding anything?")
     for _,value in ipairs(menu_options) do
-        print("Registering "..value.name)
-        RCM.register_icon(value)             
+        print("Adding "..value.name)
+        RCM.add_icon(value)             
     end
     
     -- load the rest of your game
