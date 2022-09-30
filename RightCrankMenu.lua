@@ -91,7 +91,7 @@ RightCrankMenu.angle = 0
 
 Add an entry to the menu the menu.
 
-    RightCrankMenu.add_icon(icon)
+    RightCrankMenu.add_icon(icon, after)
 
     'icon' is a table similar to this:
         
@@ -134,6 +134,8 @@ Add an entry to the menu the menu.
                      good in 'game plays player' type games (e.g. Doki Doki
                      Literature Club or Undertale)
 
+    'after' is the name of the icon after which to insert the new entry. You
+            can leave this as null for insertion at the end of the menu
 
 Remove an item from the menu
 
@@ -158,6 +160,13 @@ Change the shift ratio of a menu item to make it harder or easier to select
     
     'ratio' is the new shift ratio, below 1 is harder to select, above 1 is easier
     
+Check the shift ratio for a menu item
+    
+    RightCrankMenu.get_shift_ratio(name)
+    
+    'name' is the name of the item to remove, as specified when the item was added
+    
+    returns the shift ration of the names menu item
     
 Register the image for the menu selector    
 
@@ -223,26 +232,15 @@ shown. The following functions control this behaviour.
            activated when it is shown, but by specifying 'no_activate' you can 
            leave the menu deactivated after it is shown.
 --]]
-function RightCrankMenu.add_icon(icon)
+function RightCrankMenu.add_icon(icon, after)
     
     -- set up defaults for options
-    local after = nil     -- default to end of table
     local shift_angle = RightCrankMenu.default_icon_shift_angle
     
     -- handle options 
     if icon['enabled'] == nil then icon['enabled'] = true end
     
-    if icon['after'] ~= nil then 
-        after = icon['after']
-        icon['after'] = nil
-    end
-    
     if icon['shift_ratio'] == nil then icon['shift_ratio'] = 1 end
-    
-    -- if this is the first option added, set it to the 'current' option
-    if #RightCrankMenu.menu_titles == 0 then 
-        RightCrankMenu.current_icon = 1
-    end
     
     -- default to insert at the end of the menu
     local index = #RightCrankMenu.menu_titles+1
@@ -263,7 +261,7 @@ function RightCrankMenu.add_icon(icon)
     RightCrankMenu.full_rotation_angle = RightCrankMenu.full_rotation_angle + RightCrankMenu.icon_shift_angle
     
     -- correct for an icon inserted before our current selection in the menu
-    if RightCrankMenu.angle >= insert_angle then
+    if index > RightCrankMenu.get_active_icon_index() then
         RightCrankMenu.angle = RightCrankMenu.angle + RightCrankMenu.icon_shift_angle
     end
 end
@@ -273,7 +271,7 @@ function RightCrankMenu.remove_icon(name)
     for i=#menu, 1, -1 do
         if menu[i]['name'] == name then
             table.remove(menu, i)
-            if RightCrankMenu.angle >= i*RightCrankMenu.icon_shift_angle then
+            if i >= RightCrankMenu.get_active_icon_index() then
                 RightCrankMenu.angle = RightCrankMenu.angle - RightCrankMenu.icon_shift_angle
             end
             RightCrankMenu.full_rotation_angle = RightCrankMenu.full_rotation_angle - RightCrankMenu.icon_shift_angle
@@ -305,6 +303,14 @@ function RightCrankMenu.set_shift_ratio(name, ratio)
     end
 end
 
+function RightCrankMenu.get_shift_ratio(name)
+    for index,value in ipairs(RightCrankMenu.menu_titles) do
+        if value['name'] == name then
+            return value['shift_ratio']
+        end
+    end
+end
+
 function RightCrankMenu.register_selector(selector)
     RightCrankMenu.selector = selector
 end
@@ -319,17 +325,18 @@ function RightCrankMenu.is_active(active)
     return RightCrankMenu.active
 end
 
-function RightCrankMenu.get_active_icon()
-  
+function RightCrankMenu.get_active_icon_index()
     local icon_selection = RightCrankMenu.angle / RightCrankMenu.icon_shift_angle
     icon_selection = math.ceil(icon_selection+0.5)
     
     -- handle wrapping
     if icon_selection > #RightCrankMenu.menu_titles then icon_selection = 1 end
     
-    RightCrankMenu.current_icon = icon_selection
+    return icon_selection
+end
     
-    return RightCrankMenu.menu_titles[RightCrankMenu.current_icon]
+function RightCrankMenu.get_active_icon()
+    return RightCrankMenu.menu_titles[RightCrankMenu.get_active_icon_index()]
 end
 
 function RightCrankMenu.select(args)
@@ -523,31 +530,42 @@ function RightCrankMenu.draw_icon(icon, order)
 
   angle = -angle -- invert controls
 
+  local function get_functional_icon_height()
+    local h = RightCrankMenu.Ico_H
+    if (#RightCrankMenu.menu_titles * RightCrankMenu.Ico_H) < Scr_H then
+        h = Scr_H / #RightCrankMenu.menu_titles
+    end
+    return h
+  end
+
   local function get_y_from_angle(angle, order)
-    local y = (order + (angle/RightCrankMenu.icon_shift_angle)) * RightCrankMenu.Ico_H
+    local y = (order + (angle/RightCrankMenu.icon_shift_angle)) * get_functional_icon_height()
     y = y + RightCrankMenu.offset
     return y
   end
   
-  local y = get_y_from_angle(angle, order)
+  local y={}
+  y[1] = get_y_from_angle(angle, order)
+  y[2] = get_y_from_angle(angle - RightCrankMenu.full_rotation_angle, order)
+  y[3] = get_y_from_angle(angle + RightCrankMenu.full_rotation_angle, order)
   
-  if y > Scr_H then
-    -- if y is right off the bottom of the screen, we should recalculate it in case it is at the top
-    angle = angle - RightCrankMenu.full_rotation_angle
-    y = get_y_from_angle(angle, order)
-  elseif y+RightCrankMenu.Ico_H < 0 then
-    -- if y is right off the top of the screen, we should recalculate it in case it is at the bottom
-    angle = angle + RightCrankMenu.full_rotation_angle
-    y = get_y_from_angle(angle, order)
-  end
-  
-  local x = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y)^2)/1000
+  local x={}
+  x[1] = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y[1])^2)/1000
+  x[2] = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y[2])^2)/1000
+  x[3] = Scr_W - RightCrankMenu.Ico_W + ((RightCrankMenu.offset-y[3])^2)/1000
   
     if RightCrankMenu.animating then
-        x = RightCrankMenu.calculate_animation_x(x)
+        x[1] = RightCrankMenu.calculate_animation_x(x[1])
+        x[2] = RightCrankMenu.calculate_animation_x(x[2])
+        x[3] = RightCrankMenu.calculate_animation_x(x[3])
     end
   
-  playdate.graphics.image.draw(icon,x,y)
+  local fh = get_functional_icon_height()
+  for c = 1,3 do
+    if y[c] > -fh and y[c] < Scr_H + fh then
+        playdate.graphics.image.draw(icon,x[c],y[c])
+    end
+  end
   
 end
     
@@ -567,7 +585,7 @@ function RightCrankMenu.debug_print()
     playdate.graphics.drawText("RCM angle: "..RightCrankMenu.angle,125,25)
     playdate.graphics.drawText("FRA: "..RightCrankMenu.full_rotation_angle,125,50)
     playdate.graphics.drawText("delta: "..debug_delta,125,75)
-    playdate.graphics.drawText("icon: "..RightCrankMenu.current_icon,125,100)
+    playdate.graphics.drawText("icon: "..RightCrankMenu.get_active_icon_index(),125,100)
 end
 
 return RightCrankMenu

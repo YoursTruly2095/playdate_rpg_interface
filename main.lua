@@ -40,9 +40,6 @@ RightCrankMenu.lua.
 
 RCM = import("RightCrankMenu")
 
--- a string to display a message when a menu item is selected
-local menu_message = ""
-
 -- an image which represents the rest of your game
 local rest_of_game
 
@@ -94,7 +91,6 @@ local menu_options =
         name='look',
         fn=function(x) look() end,   
         icon="menu_graphics/look_t.png",
-        shift_ratio = 0.2,                  
     },
     {
         name='talk',    
@@ -107,16 +103,13 @@ local menu_options =
         name='magic',       
         fn=function(x) magic() end,      
         icon="menu_graphics/magic_t.png",
+        shift_ratio = 0.2,                  
     },
+--[[    
     {
         name='items',        
         fn=function(x) print_message("You rifle through your belongings") end,       
         icon="menu_graphics/items_t.png",
-    },
-    {
-        name='gear',        
-        fn=function(x) equipment() end,      
-        icon="menu_graphics/gear_t.png",
     },
     {
         name='options',       
@@ -128,14 +121,29 @@ local menu_options =
         fn=function(x) print_message("Monika already got your files") end,   
         icon="menu_graphics/game_t.png",
     },
+--]]
 }
     
--- this option won't be in the menu at startup, but gets added dynamically later
+-- these options get added dynamically added and removed from the menu
 local fight_option = 
 {
     name='fight',   
     fn=function(x) print_message("You attack! Viciously!!") end, 
     icon="menu_graphics/fight_t.png",
+}
+
+local draw_option = 
+{
+    name='draw',   
+    fn=function(x) draw() end, 
+    icon="menu_graphics/draw_t.png",
+}
+
+local sheath_option = 
+{
+    name='sheath',   
+    fn=function(x) sheath() end, 
+    icon="menu_graphics/sheath_t.png",
 }
 
 
@@ -168,21 +176,39 @@ function talk()
 end
 
 function magic()
-    print_message("You magic up a sword - now fight!")    
-    -- insert the fight option into the menu after 'talk'
-    fight_option['after'] = 'talk'
-    fight_option['shift_ratio'] = 2
-    RCM.add_icon(fight_option)   -- insert 'fight' after talk, and require 120 degrees crank to move past it
+    print_message("Magic gets easier with practice")    
 
-    -- set ratio for 'look' back to 1 
-    RCM.set_shift_ratio('look', 1)
+    -- set shift ratio for 'magic' since it is getting easier
+    local sr = RCM.get_shift_ratio('magic')
+    if sr < 1 then sr = sr + 0.2 end
+    RCM.set_shift_ratio('magic', sr)
     
 end
 
-function equipment()
-    print_message("You clumsily drop your sword(s)!!")
-    -- remove any 'fight' icons from the list    
+function draw()
+    print_message("You draw your sword")
+    
+    fight_option['shift_ratio'] = 2     -- fight opton is easy to select
+    RCM.add_icon(fight_option, 'magic')   
+    
+    RCM.add_icon(sheath_option, 'fight')
+    
+    -- you can't draw your sword twice...
+    -- remove after adding 'fight', ensures 'fight' ends up under selector after drawing sword
+    RCM.remove_icon('draw')
+end
+
+function sheath()
+    print_message("You sheath your sword")
+    
     RCM.remove_icon('fight')
+    RCM.remove_icon('sheath')
+
+    -- add this after removing the previous 2 options
+    -- ensures that 'draw' option ends up under the selector after selecting 'sheath'
+    draw_option['after'] = 'magic'
+    RCM.add_icon(draw_option)   
+    
 end
 
 
@@ -198,8 +224,10 @@ function load_game()
         end
     end
     
-    -- load the icon for the fight option too
+    -- load the icons for the dynamic option too
     fight_option['icon']=playdate.graphics.image.new(fight_option['icon'])
+    draw_option['icon']=playdate.graphics.image.new(draw_option['icon'])
+    sheath_option['icon']=playdate.graphics.image.new(sheath_option['icon'])
     
     -- load the selector
     local selector = playdate.graphics.image.new("menu_graphics/selector.png")
@@ -211,6 +239,9 @@ function load_game()
         print("Adding "..value.name)
         RCM.add_icon(value)             
     end
+    
+    -- add the draw option, we want this at startup
+    RCM.add_icon(draw_option)
     
     -- load the rest of your game
     rest_of_game = playdate.graphics.image.new("menu_graphics/background.png")
@@ -248,12 +279,17 @@ function playdate.update()
     update_rest_of_game(dt)
     RCM.update(dt)
     
+    -- RCM.debug_print()
+    
 end
 
 
 -- do all your game stuff outside of the RightCrankMenu
 -- in this example, we just draw a background and some
 -- text
+local message_timer = 0
+local menu_message = ""
+
 function update_rest_of_game(dt)
   
   -- draw an image which represents the rest of the game
@@ -267,6 +303,12 @@ function update_rest_of_game(dt)
     -- print the message from the menu
   playdate.graphics.drawText(menu_message,5,205)
   
+  -- 2 second timer
+  message_timer = message_timer + dt
+  if message_timer > 2 then
+      menu_message = ""
+  end
+  
 end
 
 -- Set the menu text that which will be printed each frame.
@@ -276,6 +318,7 @@ end
 function print_message(message)
   
   menu_message=message
+  message_timer = 0
 
 end
 
