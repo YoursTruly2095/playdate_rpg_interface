@@ -272,12 +272,9 @@ you would prefer to call them separately.
 --]]
 function playdate.update()
     
-    -- playdate update is locked to framerate
-    local dt = 1/30
-    
     playdate.graphics.clear()
-    update_rest_of_game(dt)
-    RCM.update(dt)
+    update_rest_of_game()
+    RCM.update()
     
     -- RCM.debug_print()
     
@@ -290,7 +287,10 @@ end
 local message_timer = 0
 local menu_message = ""
 
-function update_rest_of_game(dt)
+function update_rest_of_game()
+  
+    -- playdate update is locked to framerate
+    local dt = 1/30
   
   -- draw an image which represents the rest of the game
   -- this is currently just a gray background 

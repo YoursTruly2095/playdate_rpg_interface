@@ -406,6 +406,8 @@ work happily.
 
 function RightCrankMenu.update(dt)
     
+    if dt == null then dt = 1/30 end
+    
     -- handle the crank input
     if RightCrankMenu.is_active() then
         local last_crank_angle = RightCrankMenu.crank_angle
