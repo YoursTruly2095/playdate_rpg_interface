@@ -7,33 +7,31 @@ Based on ConfidentFloor6601/playdate_rpg_interface
 UPDATE! Now runs on an actual Playdate (and Playdate Simulator).
 
 NOTE! If you just run the code you'll see the menu behaves a bit strangely.
-This is because it is set up to test all the options below! In particular,
-the twitchiness of the look icon will be resolved when you cast magic 
-(among other things...)
+This is because it is set up to test all the options below. In particular,
+the twitchiness of the magic icon will be reduced as you repeatedly cast
+magic.
 
 Some configuration options are available 
-1) Number of icons in the menu
-2) Size of icons
-3) Vertical location of the selection box
-4) Angle through which to turn the crank to select next icon
+1) Size of icons
+2) Vertical location of the selection box
+3) Angle through which to turn the crank to select next icon
 
 Graphics loading is the responsibility of the caller. Check out main.lua
 for an example of how to set this up easily.
 
-Register icons with the menu using 
+Add icons with the menu using 
 ```
-  RightCrankMenu.register_icon(icon)
+  RightCrankMenu.add_icon(icon, after)
 ```  
 'icon' is a table with the following entries:
 ```
 {
     name='talk',    
     fn=function(x) talk() end,  
-    icon=<a-love-image>,
-    disabled_icon=<another-love-image>,   --optional
-    enabled=true,                         --optional
-    after='look',                         --optional
-    shift_ratio=2,                        --optional
+    icon=<a-playdate-image>,
+    disabled_icon=<another-playdate-image>, --optional
+    enabled=true,                           --optional
+    shift_ratio=2,                          --optional
 },
 ```
 
@@ -47,17 +45,20 @@ Register icons with the menu using
 
 'enabled' determines whether the icon can be selected and which graphic is displayed, defaults to true
 
-'after' is the name of the icon to insert this icon after in the menu. If not present the ison is inserted at the end
-
 'shift_ratio' is the ratio of angle required to move past this icon, compared with normal
 
+'after' is an argument with the name of the icon after which to insert the new icon. This can be left
+        null to insert the new icon at the end of the menu.
   
 Other API functions are
 ```
   RightCrankMenu.remove_icon(name)            -- removes icon(s) with the given name
+  
   RightCrankMenu.enable_icon(name)            -- enable the named icon
   RightCrankMenu.disable_icon(name)           -- disable the named icon
+  
   RightCrankMenu.set_shift_ratio(name, ratio) -- set the shift ratio for the named icon
+  RightCrankMenu.get_shift_ratio(name)        -- get the shift ratio for the named icon
   
   RightCrankMenu.set_active(active)           -- active is true or false, controls whether the crank operates the menu
   RightCrankMenu.is_active()                  -- return true or false
@@ -68,10 +69,11 @@ Other API functions are
 You must also call
 ```
   RightCrankMenu.update(dt)
-  RightCrankMenu.draw()
 ```
-from their respective love2d functions
-  
+from playdate.update(). Note that unlike love2d, playdate.update() isn't called with a dt (delta time) from the system,
+but in order to animate the hide/show of the menu, RightCrankMenu.update(dt) needs a dt. You can leave this null, and 
+RightCrankMenu will assume the playdate default framerate of 30fps. Or you can pass a value if you have adjusted the
+framerate.
 
 This version includes placeholder graphics so it runs OTB in the Playdate Simulator (or an actual Playdate).
 You can use the graphics in your game if you want to. But you won't want to :-)
